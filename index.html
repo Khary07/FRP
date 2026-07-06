@@ -1,0 +1,2059 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#c47018">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Artemiah">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Artemiah FRP</title>
+<style>
+:root{
+  --void:#0a0806;--base:#110e09;--surf:#1c1710;--card:#251d11;--card2:#2e2518;
+  --bord:#3d2e18;--bord2:#6b4820;--ember:#c47018;--fire:#e8901e;--gold:#b89040;
+  --parch:#e2d090;--scroll:#a89060;--ash:#786040;--shadow:#483820;
+  --hp-hi:#246020;--hp-md:#585010;--hp-lo:#681818;
+  --en-col:#2060a0;--mn-col:#602080;
+  --crit:#d4b000;--fail:#881010;
+  --nav-h:62px;--hdr-h:52px;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--base);color:var(--parch);font-family:Georgia,'Times New Roman',serif}
+button{cursor:pointer;font-family:inherit;border:none;background:none;color:inherit}
+input,textarea,select{font-family:inherit;color:var(--parch);background:var(--surf);border:1px solid var(--bord);border-radius:5px;padding:8px 10px;outline:none;font-size:.9rem;width:100%}
+input:focus,textarea:focus,select:focus{border-color:var(--ember)}
+textarea{resize:vertical;min-height:60px}
+select option{background:var(--card)}
+img{object-fit:cover}
+.hidden{display:none!important}
+
+/* ── APP SHELL ── */
+#app{height:100dvh;display:flex;flex-direction:column;overflow:hidden;position:relative}
+
+/* ── SCREENS ── */
+.screen{flex:1;display:flex;flex-direction:column;overflow:hidden}
+
+/* ── SELECT SCREEN ── */
+#scr-select{background:var(--base);overflow-y:auto;padding:20px 16px 32px}
+.select-title{text-align:center;margin-bottom:4px}
+.select-title h1{font-size:1.6rem;color:var(--fire);letter-spacing:.1em;text-shadow:0 0 20px rgba(200,112,24,.4)}
+.select-title p{font-size:.7rem;color:var(--ash);letter-spacing:.15em;text-transform:uppercase;margin-top:2px}
+.select-divider{height:1px;background:linear-gradient(90deg,transparent,var(--bord2),transparent);margin:16px 0}
+.char-slots{display:flex;flex-direction:column;gap:12px}
+.char-slot{background:var(--card);border:1px solid var(--bord);border-radius:10px;padding:14px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:border-color .2s,background .2s;min-height:80px}
+.char-slot:active{background:var(--card2);border-color:var(--ember)}
+.char-slot.empty{border-style:dashed;opacity:.7}
+.slot-avatar{width:52px;height:52px;border-radius:50%;background:var(--surf);border:1px solid var(--bord2);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:1.4rem}
+.slot-avatar img{width:100%;height:100%}
+.slot-info{flex:1}
+.slot-name{font-size:1rem;color:var(--parch)}
+.slot-sub{font-size:.7rem;color:var(--ash);margin-top:2px}
+.slot-new{font-size:.85rem;color:var(--scroll);font-style:italic}
+.slot-del{padding:6px 10px;color:var(--fail);font-size:.75rem;opacity:.6;flex-shrink:0}
+.slot-del:active{opacity:1}
+
+/* ── CREATE WIZARD ── */
+#scr-create{background:var(--base);overflow:hidden}
+.wiz-header{padding:14px 16px 10px;border-bottom:1px solid var(--bord);flex-shrink:0}
+.wiz-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.wiz-back{font-size:1.2rem;color:var(--scroll);padding:4px 8px}
+.wiz-title{font-size:.7rem;color:var(--ember);letter-spacing:.15em;text-transform:uppercase;flex:1}
+.wiz-step-ind{font-size:.7rem;color:var(--ash)}
+.wiz-progress{height:3px;background:var(--surf);border-radius:2px;overflow:hidden}
+.wiz-progress-fill{height:100%;background:linear-gradient(90deg,var(--ember),var(--fire));border-radius:2px;transition:width .3s}
+.wiz-body{flex:1;overflow-y:auto;padding:16px;padding-bottom:80px}
+.wiz-body::-webkit-scrollbar{width:3px}
+.wiz-body::-webkit-scrollbar-thumb{background:var(--bord2);border-radius:2px}
+.wiz-footer{position:absolute;bottom:0;left:0;right:0;padding:12px 16px;background:var(--base);border-top:1px solid var(--bord);display:flex;gap:8px;z-index:5}
+.wiz-btn-next{flex:2;padding:13px;border-radius:7px;background:var(--ember);color:var(--void);font-size:.9rem;letter-spacing:.08em;text-transform:uppercase;font-weight:bold;transition:all .15s}
+.wiz-btn-next:active{background:var(--fire)}
+.wiz-btn-next:disabled{opacity:.4;pointer-events:none}
+.wiz-field{margin-bottom:14px}
+.wiz-field label{display:block;font-size:.65rem;color:var(--ash);text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px}
+.wiz-title-big{font-size:1.1rem;color:var(--parch);margin-bottom:4px}
+.wiz-desc{font-size:.8rem;color:var(--scroll);margin-bottom:16px;line-height:1.5}
+.race-grid,.class-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.race-card,.class-card{background:var(--surf);border:1px solid var(--bord);border-radius:7px;padding:10px;cursor:pointer;transition:all .2s;text-align:center}
+.race-card.selected,.class-card.selected{background:rgba(196,112,24,.15);border-color:var(--ember)}
+.race-card:active,.class-card:active{background:var(--card2)}
+.race-card-name,.class-card-name{font-size:.9rem;color:var(--parch);margin-bottom:2px}
+.race-card-pts,.class-card-sub{font-size:.65rem;color:var(--ash)}
+.race-card-bonus{font-size:.62rem;color:var(--gold);margin-top:3px;font-style:italic}
+.stat-dist-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.stat-dist-block{background:var(--surf);border:1px solid var(--bord);border-radius:6px;padding:8px;text-align:center}
+.stat-dist-name{font-size:.6rem;color:var(--ash);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.stat-dist-val{font-size:1.4rem;font-weight:bold;color:var(--fire);margin-bottom:4px}
+.stat-dist-btns{display:flex;gap:4px;justify-content:center}
+.stat-pm{width:26px;height:26px;border-radius:50%;border:1px solid var(--bord2);background:var(--card);color:var(--scroll);font-size:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.stat-pm:active{background:var(--card2);color:var(--parch)}
+.pts-counter{text-align:center;font-size:.8rem;color:var(--scroll);margin-bottom:8px}
+.pts-counter span{color:var(--fire);font-size:1rem;font-weight:bold}
+.skill-dist-list{display:flex;flex-direction:column;gap:6px}
+.skill-dist-row{display:flex;align-items:center;gap:8px;background:var(--surf);border:1px solid var(--bord);border-radius:5px;padding:8px 10px}
+.skill-dist-name{flex:1;font-size:.82rem;color:var(--parch)}
+.skill-dist-stat{font-size:.6rem;color:var(--ash);flex-shrink:0;width:60px}
+.skill-dist-val{font-size:.95rem;color:var(--fire);min-width:24px;text-align:center}
+.review-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.review-block{background:var(--surf);border:1px solid var(--bord2);border-radius:6px;padding:10px;text-align:center}
+.review-val{font-size:1.4rem;font-weight:bold;color:var(--parch)}
+.review-label{font-size:.6rem;color:var(--ash);text-transform:uppercase;margin-top:2px}
+.img-upload-area{border:2px dashed var(--bord2);border-radius:10px;padding:30px;text-align:center;cursor:pointer;transition:all .2s}
+.img-upload-area:active{border-color:var(--ember);background:rgba(196,112,24,.05)}
+.img-upload-preview{width:120px;height:120px;border-radius:50%;object-fit:cover;border:2px solid var(--ember);margin:0 auto 12px;display:block}
+.img-hint{font-size:.75rem;color:var(--ash)}
+
+/* ── MAIN SCREEN ── */
+#scr-main{background:var(--base)}
+#main-header{height:var(--hdr-h);flex-shrink:0;background:linear-gradient(180deg,#1e1508 0%,var(--surf) 100%);border-bottom:1px solid var(--bord2);display:flex;align-items:center;padding:0 12px;gap:10px;position:relative;z-index:10}
+#main-header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--ember),transparent);opacity:.4}
+.hdr-avatar-btn{width:38px;height:38px;border-radius:50%;background:var(--surf);border:1px solid var(--bord2);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1rem}
+.hdr-avatar-btn img{width:100%;height:100%;object-fit:cover}
+.hdr-info{flex:1;min-width:0}
+.hdr-name{font-size:1rem;color:var(--fire);font-weight:bold;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hdr-sub{font-size:.62rem;color:var(--ash);letter-spacing:.08em;text-transform:uppercase}
+.hdr-vitals{display:flex;flex-direction:column;gap:3px;align-items:flex-end}
+.hdr-hp-row{display:flex;align-items:center;gap:5px}
+.hdr-bar{width:70px;height:5px;background:var(--void);border-radius:3px;overflow:hidden;border:1px solid var(--bord)}
+.hdr-bar-fill{height:100%;border-radius:3px;transition:width .3s}
+.hdr-val{font-size:.65rem;color:var(--scroll);min-width:30px;text-align:right}
+
+#main-content{flex:1;overflow:hidden;position:relative}
+.tab{position:absolute;inset:0;overflow-y:auto;padding:10px 10px 12px;display:none}
+.tab.active{display:block}
+.tab::-webkit-scrollbar{width:3px}
+.tab::-webkit-scrollbar-thumb{background:var(--bord2);border-radius:2px}
+
+#bottom-nav{height:var(--nav-h);flex-shrink:0;background:var(--surf);border-top:1px solid var(--bord2);display:grid;grid-template-columns:repeat(5,1fr)}
+.nav-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--ash);transition:color .2s;padding:6px 0}
+.nav-btn.active{color:var(--fire)}
+.nav-ico{font-size:1.25rem;line-height:1}
+.nav-lbl{font-size:.55rem;letter-spacing:.06em;text-transform:uppercase}
+
+/* ── PANELS & MODALS ── */
+#panel-overlay{position:fixed;inset:0;z-index:50;display:none}
+#panel-overlay.open{display:flex}
+.panel-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.65)}
+.panel-box{position:relative;width:90%;max-width:380px;height:100dvh;background:var(--card);border-right:1px solid var(--bord2);overflow-y:auto;display:flex;flex-direction:column}
+.panel-box::-webkit-scrollbar{width:3px}
+.panel-box::-webkit-scrollbar-thumb{background:var(--bord2);border-radius:2px}
+.panel-hero{position:relative;height:180px;overflow:hidden;flex-shrink:0}
+.panel-hero-bg{position:absolute;inset:0;filter:blur(8px) brightness(.4);transform:scale(1.1);background-size:cover;background-position:center}
+.panel-hero-content{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+.panel-avatar{width:80px;height:80px;border-radius:50%;border:2px solid var(--ember);overflow:hidden;background:var(--surf);display:flex;align-items:center;justify-content:center;font-size:2rem}
+.panel-avatar img{width:100%;height:100%;object-fit:cover}
+.panel-char-name{font-size:1.1rem;color:var(--parch);font-weight:bold}
+.panel-char-sub{font-size:.7rem;color:var(--scroll)}
+.panel-close{position:absolute;top:10px;right:10px;font-size:1.2rem;color:var(--scroll);z-index:2;padding:4px 8px;background:rgba(0,0,0,.4);border-radius:20px}
+.panel-section{padding:12px 14px;border-bottom:1px solid var(--bord)}
+.panel-sec-title{font-size:.62rem;color:var(--ember);text-transform:uppercase;letter-spacing:.15em;margin-bottom:10px}
+.panel-stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.panel-stat{background:var(--surf);border:1px solid var(--bord);border-radius:5px;padding:8px 4px;text-align:center;cursor:pointer;transition:border-color .2s}
+.panel-stat:active{border-color:var(--ember)}
+.panel-stat-name{font-size:.58rem;color:var(--ash);text-transform:uppercase;letter-spacing:.06em}
+.panel-stat-val{font-size:1.3rem;font-weight:bold;color:var(--fire)}
+.panel-skill-list{display:flex;flex-direction:column;gap:5px}
+.panel-skill-row{display:flex;align-items:center;gap:8px;background:var(--surf);border:1px solid var(--bord);border-radius:4px;padding:7px 10px;cursor:pointer;transition:border-color .2s}
+.panel-skill-row:active{border-color:var(--ember)}
+.panel-skill-name{flex:1;font-size:.8rem;color:var(--parch)}
+.panel-skill-val{font-size:.9rem;color:var(--fire);min-width:28px;text-align:right}
+.panel-vital-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.panel-vital-label{font-size:.7rem;color:var(--ash);width:50px;flex-shrink:0}
+.panel-vital-bar{flex:1;height:8px;background:var(--void);border-radius:4px;overflow:hidden;border:1px solid var(--bord)}
+.panel-vital-fill{height:100%;border-radius:4px;transition:width .3s}
+.panel-vital-nums{font-size:.72rem;color:var(--scroll);min-width:45px;text-align:right}
+.panel-vital-edit{display:flex;gap:4px;align-items:center}
+.panel-vital-edit label{font-size:.65rem;color:var(--ash);flex-shrink:0}
+.panel-vital-edit input{width:65px;text-align:center;padding:5px}
+.practice-item{background:var(--surf);border:1px solid var(--bord);border-radius:5px;padding:10px;margin-bottom:7px}
+.practice-name-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.practice-name{flex:1;font-size:.85rem;color:var(--parch)}
+.practice-del{color:var(--fail);font-size:.75rem;opacity:.6}
+.practice-del:active{opacity:1}
+.practice-prog-row{display:flex;align-items:center;gap:6px}
+.practice-bar{flex:1;height:8px;background:var(--void);border-radius:4px;overflow:hidden;border:1px solid var(--bord)}
+.practice-bar-fill{height:100%;background:linear-gradient(90deg,var(--ember),var(--fire));border-radius:4px;transition:width .3s}
+.practice-inp{width:45px;text-align:center;padding:4px;font-size:.8rem}
+.practice-slash{font-size:.7rem;color:var(--ash)}
+.add-practice-btn{width:100%;padding:10px;border:1px dashed var(--bord2);border-radius:5px;color:var(--scroll);font-size:.8rem;transition:all .2s;margin-top:4px}
+.add-practice-btn:active{background:var(--card2);color:var(--parch)}
+
+/* ── PANELS STATS ── */
+.panel-lvl-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.panel-lvl-val{font-size:1.1rem;color:var(--parch)}
+.panel-lvl-up{padding:6px 14px;border-radius:5px;border:1px solid var(--ember);background:rgba(196,112,24,.15);color:var(--fire);font-size:.75rem}
+.panel-lvl-up:active{background:rgba(196,112,24,.3)}
+
+/* ── KARAKTER TAB ── */
+.kd-strip{display:flex;gap:6px;margin-bottom:10px}
+.kd-block{flex:1;background:var(--card);border:1px solid var(--bord2);border-radius:6px;padding:8px;text-align:center}
+.kd-val{font-size:1.3rem;font-weight:bold;color:var(--parch)}
+.kd-label{font-size:.58rem;color:var(--ash);text-transform:uppercase;letter-spacing:.08em;margin-top:1px}
+.vital-panel{background:var(--card);border:1px solid var(--bord);border-radius:8px;padding:12px;margin-bottom:10px}
+.vital-title{font-size:.62rem;color:var(--ember);text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px}
+.vital-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.vital-row:last-child{margin-bottom:0}
+.vital-icon{font-size:1rem;width:22px;flex-shrink:0;text-align:center}
+.vital-bar-wrap{flex:1}
+.vital-bar{height:10px;background:var(--void);border-radius:5px;overflow:hidden;border:1px solid var(--bord);margin-bottom:2px}
+.vital-bar-fill{height:100%;border-radius:5px;transition:width .3s,background .3s}
+.vital-nums{font-size:.7rem;color:var(--scroll)}
+.vital-ctrl{display:flex;gap:5px;align-items:center}
+.vital-btn{width:28px;height:28px;border-radius:50%;border:1px solid var(--bord2);background:var(--surf);color:var(--scroll);font-size:1.1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.vital-btn:active{background:var(--card2)}
+.vital-input{width:50px;text-align:center;padding:4px;font-size:.8rem}
+.stats-panel{background:var(--card);border:1px solid var(--bord);border-radius:8px;padding:12px;margin-bottom:10px}
+.panel-title-bar{font-size:.62rem;color:var(--ember);text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--bord)}
+.stat-grid-6{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:12px}
+.stat-block{background:var(--surf);border:1px solid var(--bord);border-radius:6px;padding:9px 5px;text-align:center;cursor:pointer;transition:all .2s}
+.stat-block:active{border-color:var(--ember);background:var(--card2)}
+.stat-name{font-size:.58rem;color:var(--ash);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+.stat-val{font-size:1.5rem;font-weight:bold;color:var(--fire);line-height:1}
+.stat-hint{font-size:.55rem;color:var(--shadow);margin-top:2px}
+.skill-list{display:flex;flex-direction:column;gap:5px}
+.skill-row{display:flex;align-items:center;gap:8px;background:var(--surf);border:1px solid var(--bord);border-radius:5px;padding:9px 10px;cursor:pointer;transition:border-color .2s}
+.skill-row:active{border-color:var(--ember);background:var(--card2)}
+.skill-name{flex:1;font-size:.82rem;color:var(--parch)}
+.skill-stat-tag{font-size:.6rem;color:var(--ash);flex-shrink:0}
+.skill-val{font-size:.9rem;color:var(--fire);min-width:28px;text-align:right}
+.action-strip{display:flex;gap:8px;margin-bottom:10px}
+.action-btn{flex:1;padding:13px 8px;border-radius:7px;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;font-weight:bold;border:1px solid;transition:all .15s;text-align:center}
+.action-btn:active{filter:brightness(1.2)}
+.act-saldiri{border-color:var(--bord2);color:var(--scroll);background:var(--surf)}
+.act-hasar-al{border-color:#681818;color:#cc3030;background:rgba(100,20,20,.15)}
+.act-hasar-ver{border-color:#2a5a10;color:#60b030;background:rgba(40,90,16,.15)}
+
+/* ── ROLL RESULT ── */
+.roll-box{background:var(--surf);border:1px solid var(--bord2);border-radius:8px;padding:14px;margin-bottom:10px;text-align:center;min-height:70px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.roll-num{font-size:2.8rem;font-weight:bold;color:var(--parch);line-height:1}
+.roll-num.crit{color:var(--crit);text-shadow:0 0 15px rgba(212,176,0,.4)}
+.roll-num.fail{color:var(--fail)}
+.roll-detail{font-size:.72rem;color:var(--ash);margin-top:4px}
+.roll-ctx{font-size:.78rem;margin-top:3px;font-style:italic}
+.roll-ctx.crit{color:var(--crit)}
+.roll-ctx.fail{color:var(--fail)}
+@keyframes rollAnim{0%{transform:scale(.5) rotate(-8deg);opacity:0}60%{transform:scale(1.1)}100%{transform:scale(1) rotate(0);opacity:1}}
+.roll-anim{animation:rollAnim .3s ease-out}
+
+/* ── ZIRH TAB ── */
+.equip-layout{display:grid;grid-template-columns:80px 1fr 80px;grid-template-rows:repeat(7,auto);gap:6px;align-items:center;margin-bottom:10px}
+.equip-char-col{grid-column:2;grid-row:1/8;display:flex;align-items:center;justify-content:center}
+.equip-char-img{width:110px;height:180px;border-radius:8px;border:1px solid var(--bord2);background:var(--surf);object-fit:cover;display:flex;align-items:center;justify-content:center;font-size:3rem;color:var(--ash)}
+.equip-slot{background:var(--card);border:1px solid var(--bord);border-radius:6px;padding:6px 4px;text-align:center;cursor:pointer;transition:all .2s;min-height:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.equip-slot.equipped{border-color:var(--bord2)}
+.equip-slot:active{border-color:var(--ember);background:var(--card2)}
+.equip-slot-icon{font-size:1rem;line-height:1}
+.equip-slot-label{font-size:.5rem;color:var(--ash);text-transform:uppercase;letter-spacing:.06em}
+.equip-slot-name{font-size:.58rem;color:var(--scroll);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:72px}
+.equip-slot-name.empty{color:var(--shadow);font-style:italic}
+.equip-dur-bar{width:100%;height:3px;background:var(--void);border-radius:2px;overflow:hidden;margin-top:2px}
+.equip-dur-fill{height:100%;border-radius:2px;transition:width .3s}
+.armor-summary{background:var(--card);border:1px solid var(--bord);border-radius:8px;padding:12px;margin-bottom:8px}
+.armor-sum-title{font-size:.62rem;color:var(--ember);text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px}
+.armor-sum-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+.armor-sum-row{display:flex;justify-content:space-between;align-items:center;font-size:.72rem;padding:3px 0;border-bottom:1px solid rgba(61,46,24,.5)}
+.armor-sum-type{color:var(--scroll)}
+.armor-sum-pct{color:var(--fire);font-weight:bold}
+
+/* ── ENVANTER TAB ── */
+.inv-weight-bar{background:var(--card);border:1px solid var(--bord);border-radius:7px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.inv-weight-label{font-size:.65rem;color:var(--ash);flex-shrink:0}
+.inv-w-bar{flex:1;height:8px;background:var(--void);border-radius:4px;overflow:hidden;border:1px solid var(--bord)}
+.inv-w-fill{height:100%;background:linear-gradient(90deg,var(--ember),var(--fire));border-radius:4px;transition:width .3s}
+.inv-w-nums{font-size:.7rem;color:var(--scroll);flex-shrink:0;min-width:50px;text-align:right}
+.inv-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.inv-item{background:var(--card);border:1px solid var(--bord);border-radius:7px;padding:8px;display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;transition:border-color .2s;min-height:90px}
+.inv-item:active{border-color:var(--ember)}
+.inv-item-img{width:48px;height:48px;border-radius:5px;background:var(--surf);border:1px solid var(--bord);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0}
+.inv-item-img img{width:100%;height:100%;object-fit:cover}
+.inv-item-name{font-size:.7rem;color:var(--parch);text-align:center;line-height:1.2;word-break:break-word}
+.inv-item-weight{font-size:.6rem;color:var(--ash)}
+.inv-add-cell{background:var(--surf);border:1px dashed var(--bord2);border-radius:7px;display:flex;align-items:center;justify-content:center;min-height:90px;cursor:pointer;color:var(--scroll);font-size:1.5rem;transition:all .2s}
+.inv-add-cell:active{background:var(--card);border-color:var(--ember);color:var(--parch)}
+
+/* ── NOTLAR TAB ── */
+.note-card{background:var(--card);border:1px solid var(--bord);border-radius:8px;padding:12px;margin-bottom:8px;cursor:pointer;transition:border-color .2s}
+.note-card:active{border-color:var(--ember)}
+.note-card-header{display:flex;align-items:flex-start;gap:10px;margin-bottom:6px}
+.note-img-thumb{width:44px;height:44px;border-radius:5px;background:var(--surf);border:1px solid var(--bord);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:var(--ash)}
+.note-img-thumb img{width:100%;height:100%;object-fit:cover}
+.note-title{font-size:.9rem;color:var(--parch);font-weight:bold;flex:1}
+.note-del{color:var(--fail);font-size:.75rem;opacity:.6;padding:2px 6px}
+.note-del:active{opacity:1}
+.note-text{font-size:.78rem;color:var(--scroll);line-height:1.5}
+.add-note-btn{width:100%;padding:13px;border:1px dashed var(--bord2);border-radius:8px;color:var(--scroll);font-size:.85rem;transition:all .2s}
+.add-note-btn:active{background:var(--card2);color:var(--parch);border-color:var(--ember)}
+.empty-state{text-align:center;color:var(--ash);font-size:.85rem;padding:32px 16px;font-style:italic}
+
+/* ── MODAL ── */
+#modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+#modal-overlay.open{opacity:1;pointer-events:all}
+#modal-box{background:var(--card);border:1px solid var(--bord2);border-radius:16px 16px 0 0;width:100%;max-width:480px;max-height:88dvh;overflow-y:auto;padding:18px 16px 36px;transform:translateY(30px);transition:transform .25s}
+#modal-overlay.open #modal-box{transform:translateY(0)}
+#modal-box::-webkit-scrollbar{width:3px}
+#modal-box::-webkit-scrollbar-thumb{background:var(--bord2);border-radius:2px}
+.modal-title{font-size:.68rem;color:var(--ember);letter-spacing:.15em;text-transform:uppercase;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--bord)}
+.modal-field{margin-bottom:12px}
+.modal-field label{display:block;font-size:.63rem;color:var(--ash);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}
+.modal-row{display:flex;gap:8px}
+.modal-row .modal-field{flex:1}
+.modal-btns{display:flex;gap:8px;margin-top:16px}
+.modal-ok{flex:2;padding:12px;border-radius:6px;background:var(--ember);color:var(--void);font-size:.85rem;letter-spacing:.08em;text-transform:uppercase;font-weight:bold}
+.modal-ok:active{background:var(--fire)}
+.modal-del{flex:1;padding:12px;border-radius:6px;border:1px solid var(--fail);color:var(--fail);background:rgba(100,20,20,.15);font-size:.8rem}
+.modal-del:active{background:rgba(100,20,20,.35)}
+.modal-cancel{flex:1;padding:12px;border-radius:6px;border:1px solid var(--bord);color:var(--ash);background:var(--surf);font-size:.8rem}
+.modal-cancel:active{background:var(--card2)}
+.resist-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.resist-row{display:flex;align-items:center;gap:6px;background:var(--surf);border-radius:4px;padding:5px 8px}
+.resist-type{font-size:.7rem;color:var(--scroll);flex:1}
+.resist-input{width:55px;text-align:center;padding:4px;font-size:.8rem}
+.mat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+.mat-opt{padding:8px;border-radius:5px;border:1px solid var(--bord);text-align:center;cursor:pointer;font-size:.75rem;color:var(--ash);transition:all .2s}
+.mat-opt.selected{background:rgba(196,112,24,.15);border-color:var(--ember);color:var(--fire)}
+.mat-opt:active{background:var(--card2)}
+.dmg-type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+.dmg-type-btn{padding:8px 4px;border-radius:5px;border:1px solid var(--bord);text-align:center;cursor:pointer;font-size:.68rem;color:var(--ash);transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:2px}
+.dmg-type-btn span:first-child{font-size:1rem}
+.dmg-type-btn.selected{background:rgba(196,112,24,.15);border-color:var(--ember);color:var(--fire)}
+.dmg-type-btn:active{filter:brightness(1.2)}
+.dice-btn-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:10px}
+.die-btn{aspect-ratio:1;border-radius:7px;border:1px solid var(--bord2);background:var(--surf);color:var(--scroll);font-size:.75rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transition:all .15s}
+.die-btn.selected{background:rgba(196,112,24,.2);border-color:var(--ember);color:var(--fire)}
+.die-btn:active{transform:scale(.93)}
+.die-icon-big{font-size:1.2rem}
+.adv-group{display:flex;border:1px solid var(--bord);border-radius:5px;overflow:hidden;margin-bottom:10px}
+.adv-opt{flex:1;padding:8px;text-align:center;font-size:.68rem;color:var(--ash);transition:all .2s;cursor:pointer}
+.adv-opt.active{background:var(--ember);color:var(--void);font-weight:bold}
+.mod-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;justify-content:center}
+.mod-label-txt{font-size:.7rem;color:var(--ash)}
+.mod-btn-sm{width:32px;height:32px;border-radius:50%;border:1px solid var(--bord2);background:var(--surf);color:var(--scroll);font-size:1.1rem;display:flex;align-items:center;justify-content:center}
+.mod-btn-sm:active{background:var(--card2)}
+.mod-display{font-size:1rem;color:var(--parch);min-width:36px;text-align:center}
+.roll-result-mini{background:var(--surf);border:1px solid var(--bord2);border-radius:7px;padding:12px;text-align:center;margin-bottom:10px;min-height:60px}
+.roll-result-num{font-size:2.2rem;font-weight:bold;color:var(--parch)}
+.roll-result-num.crit{color:var(--crit)}
+.roll-result-num.fail{color:var(--fail)}
+.roll-result-detail{font-size:.7rem;color:var(--ash);margin-top:3px}
+.cost-row{display:flex;gap:8px;margin-bottom:10px}
+.cost-field{flex:1}
+.cost-field label{display:block;font-size:.62rem;color:var(--ash);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.big-roll-btn{width:100%;padding:14px;border-radius:7px;background:linear-gradient(135deg,var(--ember),var(--fire));color:var(--void);font-size:.95rem;font-weight:bold;letter-spacing:.1em;text-transform:uppercase;margin-top:8px}
+.big-roll-btn:active{filter:brightness(1.1)}
+.shield-toggle{display:flex;align-items:center;gap:10px;background:var(--surf);border:1px solid var(--bord);border-radius:5px;padding:10px;margin-bottom:10px}
+.shield-toggle-label{flex:1;font-size:.82rem;color:var(--scroll)}
+.shield-toggle-btn{padding:6px 14px;border-radius:5px;border:1px solid var(--bord2);color:var(--ash);font-size:.75rem;transition:all .2s}
+.shield-toggle-btn.active{background:rgba(196,112,24,.2);border-color:var(--ember);color:var(--fire)}
+.hasar-result{background:var(--surf);border:1px solid var(--bord2);border-radius:7px;padding:12px;margin-bottom:10px;text-align:center}
+.hasar-result-raw{font-size:.75rem;color:var(--ash);margin-bottom:4px}
+.hasar-result-final{font-size:2rem;font-weight:bold;color:#cc3030}
+.hasar-result-breakdown{font-size:.68rem;color:var(--ash);margin-top:4px}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:calc(var(--nav-h) + 10px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--card2);border:1px solid var(--bord2);border-radius:20px;padding:8px 18px;font-size:.78rem;color:var(--scroll);opacity:0;pointer-events:none;transition:all .3s;z-index:200;white-space:nowrap;max-width:90vw;text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="scr-select" class="screen"></div>
+  <div id="scr-create" class="screen hidden">
+    <div class="wiz-header">
+      <div class="wiz-top">
+        <button class="wiz-back" onclick="wizBack()">←</button>
+        <div class="wiz-title" id="wiz-step-title">Karakter Oluştur</div>
+        <div class="wiz-step-ind" id="wiz-step-ind">1/7</div>
+      </div>
+      <div class="wiz-progress"><div class="wiz-progress-fill" id="wiz-prog"></div></div>
+    </div>
+    <div class="wiz-body" id="wiz-body"></div>
+    <div class="wiz-footer">
+      <button class="wiz-btn-next" id="wiz-next-btn" onclick="wizNext()">İleri</button>
+    </div>
+  </div>
+  <div id="scr-main" class="screen hidden">
+    <header id="main-header"></header>
+    <main id="main-content">
+      <div id="tab-karakter" class="tab active"></div>
+      <div id="tab-zirh" class="tab"></div>
+      <div id="tab-envanter" class="tab"></div>
+      <div id="tab-notlar" class="tab"></div>
+      <div id="tab-bilgi" class="tab"></div>
+    </main>
+    <nav id="bottom-nav">
+      <button class="nav-btn active" data-tab="karakter" onclick="showTab('karakter')">
+        <div class="nav-ico">⚔</div><div class="nav-lbl">Karakter</div>
+      </button>
+      <button class="nav-btn" data-tab="zirh" onclick="showTab('zirh')">
+        <div class="nav-ico">🛡</div><div class="nav-lbl">Zırh</div>
+      </button>
+      <button class="nav-btn" data-tab="envanter" onclick="showTab('envanter')">
+        <div class="nav-ico">⚗</div><div class="nav-lbl">Envanter</div>
+      </button>
+      <button class="nav-btn" data-tab="notlar" onclick="showTab('notlar')">
+        <div class="nav-ico">📜</div><div class="nav-lbl">Notlar</div>
+      </button>
+      <button class="nav-btn" data-tab="bilgi" onclick="showTab('bilgi')">
+        <div class="nav-ico">📖</div><div class="nav-lbl">Bilgi</div>
+      </button>
+    </nav>
+  </div>
+  <div id="panel-overlay">
+    <div class="panel-backdrop" onclick="closePanel()"></div>
+    <div class="panel-box" id="panel-box"></div>
+  </div>
+  <div id="modal-overlay" onclick="maybeCloseModal(event)">
+    <div id="modal-box"><div id="modal-content"></div></div>
+  </div>
+  <div id="toast"></div>
+</div>
+<script>
+// ═══════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════
+const RACES={
+  'İnsan':{statPts:3,skillPts:5,hp:8,desc:'Adaptif ve çok yönlü. Tüm sınıflara yatkın.',special:'2 stata +1 seçme hakkı',classes:null},
+  'Elf':{statPts:3,skillPts:4,hp:7,desc:'Eski ve bilge. Doğayla derin bağı var.',special:'Büyü hasarına büyü seviyesi kadar bonus',classes:['Savaşçı','Kolcu','Ozan','Kam','Mürit','Yeminli']},
+  'Cüce':{statPts:4,skillPts:3,hp:9,desc:'Dayanıklı ve usta. Büyüye kapalı.',special:null,classes:['Savaşçı','Barbar','Yeminli','Mürit']},
+  'Ork':{statPts:5,skillPts:2,hp:10,desc:"Ashraad çölünün savaşçıları. Shaa'nın gölgesinde yaşarlar.",special:null,classes:['Savaşçı','Barbar','Haris']},
+  'Goblin':{statPts:5,skillPts:2,hp:7,desc:'Değişmiş Elfler. Kurnaz ve hızlı.',special:null,classes:['Haris','Haydut','Büyücü']},
+  'Faunaril':{statPts:7,skillPts:1,hp:12,desc:'Yarı hayvan. Sınıf seçmez, stat bazlı ilerler.',special:'GM ile hayvan türüne göre pasif belirlenir',classes:[]}
+};
+const CLASSES={
+  'Savaşçı':{hpB:3,die:6,minHp:3,ico:'⚔'},'Kolcu':{hpB:2,die:6,minHp:3,ico:'🏹'},
+  'Barbar':{hpB:4,die:8,minHp:4,ico:'🪓'},'Haydut':{hpB:2,die:4,minHp:2,ico:'🗡'},
+  'Ozan':{hpB:2,die:4,minHp:2,ico:'🎵'},'Kam':{hpB:1,die:4,minHp:2,ico:'🔥'},
+  'Büyücü':{hpB:0,die:4,minHp:2,ico:'✨'},'Yeminli':{hpB:3,die:6,minHp:3,ico:'⚜'},
+  'Mürit':{hpB:2,die:6,minHp:3,ico:'🙏'},'Haris':{hpB:0,die:4,minHp:2,ico:'💀'}
+};
+const STAT_KEYS=['guc','ceviklik','dayaniklilik','irade','karizma','zeka'];
+const STAT_NAMES={guc:'Güç',ceviklik:'Çeviklik',dayaniklilik:'Dayanıklılık',irade:'İrade',karizma:'Karizma',zeka:'Zeka'};
+const SKILL_KEYS=['atletizm','akrobasi','gizlilik','elBecerisi','direnc','toparlanma','hafiza','analiz','zanaat','sezgi','empati','odak','yalan','gozdagi','performans','ikna'];
+const SKILL_NAMES={atletizm:'Atletizm',akrobasi:'Akrobasi',gizlilik:'Gizlilik',elBecerisi:'El Becerisi',direnc:'Direnç',toparlanma:'Toparlanma',hafiza:'Hafıza',analiz:'Analiz',zanaat:'Zanaat',sezgi:'Sezgi',empati:'Empati',odak:'Odak',yalan:'Yalan',gozdagi:'Gözdağı',performans:'Performans',ikna:'İkna'};
+const SKILL_STAT={atletizm:'guc',akrobasi:'ceviklik',gizlilik:'ceviklik',elBecerisi:'ceviklik',direnc:'dayaniklilik',toparlanma:'dayaniklilik',hafiza:'zeka',analiz:'zeka',zanaat:'zeka+ceviklik',sezgi:'irade',empati:'irade',odak:'irade',yalan:'karizma',gozdagi:'karizma',performans:'karizma',ikna:'karizma'};
+const DMG_TYPES=[
+  {k:'kesici',l:'Kesici',i:'⚔'},{k:'delici',l:'Delici',i:'🗡'},{k:'ezici',l:'Ezici',i:'🔨'},
+  {k:'ates',l:'Ateş',i:'🔥'},{k:'buz',l:'Buz',i:'❄'},{k:'yildirim',l:'Yıldırım',i:'⚡'},
+  {k:'asit',l:'Asit',i:'☣'},{k:'zehir',l:'Zehir',i:'☠'},{k:'psisik',l:'Psişik',i:'🧠'},
+  {k:'gurultu',l:'Gürültü',i:'📯'},{k:'gucHasar',l:'Güç',i:'💫'},{k:'nekrotik',l:'Nekrotik',i:'💀'}
+];
+const DMG_KEYS=DMG_TYPES.map(d=>d.k);
+const MATS_ARMOR=[
+  {k:'kumas',l:'Kumaş',r:{kesici:5,delici:5,ezici:0,ates:0,buz:0,yildirim:0,asit:0,zehir:0,psisik:0,gurultu:0,gucHasar:0,nekrotik:0}},
+  {k:'hafifDeri',l:'Hafif Deri',r:{kesici:15,delici:10,ezici:5,ates:5,buz:5,yildirim:0,asit:5,zehir:5,psisik:0,gurultu:0,gucHasar:0,nekrotik:0}},
+  {k:'ortaDeri',l:'Orta Deri',r:{kesici:20,delici:15,ezici:10,ates:10,buz:10,yildirim:5,asit:10,zehir:10,psisik:0,gurultu:0,gucHasar:0,nekrotik:0}},
+  {k:'agirDeri',l:'Ağır Deri',r:{kesici:25,delici:20,ezici:15,ates:15,buz:15,yildirim:10,asit:15,zehir:15,psisik:0,gurultu:0,gucHasar:0,nekrotik:0}},
+  {k:'hafifMetal',l:'Hafif Metal',r:{kesici:30,delici:25,ezici:20,ates:10,buz:10,yildirim:10,asit:5,zehir:5,psisik:0,gurultu:0,gucHasar:5,nekrotik:0}},
+  {k:'ortaMetal',l:'Orta Metal',r:{kesici:40,delici:35,ezici:30,ates:15,buz:15,yildirim:15,asit:10,zehir:10,psisik:0,gurultu:0,gucHasar:10,nekrotik:0}},
+  {k:'agirMetal',l:'Ağır Metal',r:{kesici:50,delici:45,ezici:40,ates:20,buz:20,yildirim:20,asit:15,zehir:15,psisik:0,gurultu:0,gucHasar:15,nekrotik:0}}
+];
+const MATS_SHIELD=[{k:'ahsap',l:'Ahşap',block:20},{k:'ahsapMetal',l:'Ahşap+Metal',block:35},{k:'metal',l:'Metal',block:50}];
+const EQUIP_SLOTS=[
+  {k:'bas',l:'Baş',i:'⛑',t:'armor',col:2,row:1},{k:'omuzluk',l:'Omuzluk',i:'🦾',t:'armor',col:1,row:2},
+  {k:'kolye',l:'Kolye',i:'📿',t:'acc',col:3,row:2},{k:'gogusuk',l:'Göğüslük',i:'🛡',t:'armor',col:1,row:3},
+  {k:'pelerin',l:'Pelerin',i:'🧥',t:'armor',col:3,row:3},{k:'kolluk',l:'Kolluk',i:'💪',t:'armor',col:1,row:4},
+  {k:'kupe',l:'Küpe',i:'💎',t:'acc',col:3,row:4},{k:'solEl',l:'Sol El',i:'🗡',t:'weapon',col:1,row:5},
+  {k:'sagEl',l:'Sağ El',i:'⚔',t:'weapon',col:3,row:5},{k:'yuzuk1',l:'Yüzük',i:'💍',t:'acc',col:1,row:6},
+  {k:'pantolon',l:'Pantolon',i:'👖',t:'armor',col:2,row:6},{k:'yuzuk2',l:'Yüzük',i:'💍',t:'acc',col:3,row:6},
+  {k:'ayakkabi',l:'Ayakkabı',i:'👢',t:'armor',col:2,row:7}
+];
+const DICE=[4,6,8,10,12,20,100];
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+const SAVE_KEY='artemiah_v1';
+let APP={characters:[],activeId:null};
+
+function loadApp(){try{const r=localStorage.getItem(SAVE_KEY);if(r)APP=JSON.parse(r);}catch(e){}}
+function saveApp(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(APP));}catch(e){}}
+
+function getChar(){return APP.characters.find(c=>c.id===APP.activeId)||null}
+
+function defChar(id){
+  return{
+    id,name:'',race:'',cls:'',level:1,image:null,
+    hp:{cur:10,max:10},enerji:{cur:5,max:5},mana:{cur:10,max:10},
+    stats:{guc:0,ceviklik:0,dayaniklilik:0,irade:0,karizma:0,zeka:0},
+    skills:{atletizm:0,akrobasi:0,gizlilik:0,elBecerisi:0,direnc:0,toparlanma:0,hafiza:0,analiz:0,zanaat:0,sezgi:0,empati:0,odak:0,yalan:0,gozdagi:0,performans:0,ikna:0},
+    equipment:{bas:null,omuzluk:null,kolye:null,gogusuk:null,pelerin:null,kolluk:null,kupe:null,solEl:null,sagEl:null,yuzuk1:null,pantolon:null,yuzuk2:null,ayakkabi:null},
+    inventory:[],notes:[],practices:[],
+    lastRoll:null
+  };
+}
+
+// ═══════════════════════════════════════════
+// CALCULATIONS
+// ═══════════════════════════════════════════
+function calcKD(ch){const cev=ch.stats.ceviklik+getEquipStatMod(ch,'ceviklik');return Math.floor(10+cev*1.5)}
+function calcEnerji(ch){return ch.stats.guc+ch.stats.ceviklik+ch.stats.dayaniklilik}
+function calcMana(ch){return Math.max(ch.stats.irade,ch.stats.zeka)*5}
+function calcHP(ch){
+  if(!ch.race||!ch.cls) return 10;
+  const r=RACES[ch.race],cl=CLASSES[ch.cls];
+  if(!r||!cl) return 10;
+  return r.hp+cl.hpB+ch.stats.dayaniklilik;
+}
+
+function getEquipResist(ch,dmgKey){
+  let pct=0;
+  EQUIP_SLOTS.forEach(s=>{
+    const eq=ch.equipment[s.k];
+    if(eq&&eq.resistances&&eq.resistances[dmgKey]) pct+=eq.resistances[dmgKey];
+  });
+  return Math.min(pct,95);
+}
+
+function getEquipStatMod(ch,statKey){
+  let mod=0;
+  EQUIP_SLOTS.forEach(s=>{
+    const eq=ch.equipment[s.k];
+    if(eq&&eq.statMods&&eq.statMods[statKey]) mod+=eq.statMods[statKey];
+  });
+  return mod;
+}
+
+function getAttackBonus(ch,handKey){
+  const eq=ch.equipment[handKey];
+  if(!eq) return 0;
+  return eq.attackBonus||0;
+}
+
+function getShieldBlock(ch){
+  const sl=ch.equipment.solEl,sr=ch.equipment.sagEl;
+  if(sl&&sl.type==='shield') return sl.blockPct||0;
+  if(sr&&sr.type==='shield') return sr.blockPct||0;
+  return 0;
+}
+
+// ═══════════════════════════════════════════
+// SCREEN ROUTING
+// ═══════════════════════════════════════════
+function showScreen(id){
+  ['scr-select','scr-create','scr-main'].forEach(s=>{
+    document.getElementById(s).classList.toggle('hidden',s!==id);
+  });
+}
+
+// ═══════════════════════════════════════════
+// SELECT SCREEN
+// ═══════════════════════════════════════════
+function renderSelect(){
+  showScreen('scr-select');
+  const el=document.getElementById('scr-select');
+  let slots='';
+  for(let i=0;i<3;i++){
+    const ch=APP.characters[i];
+    if(ch){
+      const av=ch.image?`<img src="${ch.image}" alt="">`:`<span>${ch.race?ch.race[0]:'?'}</span>`;
+      slots+=`<div class="char-slot" onclick="selectChar(${ch.id})">
+        <div class="slot-avatar">${av}</div>
+        <div class="slot-info">
+          <div class="slot-name">${ch.name||'İsimsiz'}</div>
+          <div class="slot-sub">${ch.race||''} ${ch.cls?'• '+ch.cls:''} ${ch.level?'• Sev.'+ch.level:''}</div>
+        </div>
+        <button class="slot-del" onclick="delChar(event,${ch.id})">✕</button>
+      </div>`;
+    } else if(APP.characters.length<3){
+      slots+=`<div class="char-slot empty" onclick="startCreate()">
+        <div class="slot-avatar">+</div>
+        <div class="slot-info"><div class="slot-new">Yeni Karakter Oluştur</div></div>
+      </div>`;
+      break;
+    }
+  }
+  el.innerHTML=`
+    <div class="select-title">
+      <h1>Artemiah</h1>
+      <p>Masa Üstü Fantezi Rol Yapma</p>
+    </div>
+    <div class="select-divider"></div>
+    <div class="char-slots">${slots}</div>
+    <div style="margin-top:20px;text-align:center">
+      <button onclick="showSelectGuide()" style="font-size:.72rem;color:var(--ash);padding:8px 16px;border:1px solid var(--bord);border-radius:20px">📖 Nasıl Oynanır?</button>
+    </div>`;
+}
+
+function selectChar(id){APP.activeId=id;saveApp();renderMain();}
+
+function showSelectGuide(){
+  // Temp show main with bilgi tab - instead just show modal
+  openModal(`
+    <div class="modal-title">Artemiah FRP — Hızlı Başlangıç</div>
+    <div style="font-size:.82rem;color:var(--scroll);line-height:1.7">
+      <b style="color:var(--parch)">1. Karakter oluştur</b> — Boş slota bas, ırk, sınıf ve stat seç.<br><br>
+      <b style="color:var(--parch)">2. Karaktere gir</b> — Oluşturduğun karaktere tıkla.<br><br>
+      <b style="color:var(--parch)">3. Zırh sekmesinde</b> eşyalarını kuşan. Malzeme seçince dirençler otomatik gelir.<br><br>
+      <b style="color:var(--parch)">4. Karakter sekmesinde</b> stat/becerilere dokununca D20 zarı atarsın. Saldır, Hasar Al, Hasar Ver butonlarını kullan.<br><br>
+      <b style="color:var(--parch)">5. Sol üst avatara</b> basarak paneli aç — stat düzenle, seviye atla, pratik ekle.<br><br>
+      <b style="color:var(--parch)">6. Oyun içinde</b> Bilgi sekmesine bakarak tüm mekanikleri öğrenebilirsin.
+    </div>
+    <div class="modal-btns">
+      <button class="modal-ok" onclick="closeModal()">Tamam</button>
+    </div>`);
+  // Need modal to work without main screen - add overlay to select screen
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function delChar(e,id){
+  e.stopPropagation();
+  if(!confirm('Bu karakteri silmek istiyor musun?')) return;
+  APP.characters=APP.characters.filter(c=>c.id!==id);
+  if(APP.activeId===id) APP.activeId=null;
+  saveApp(); renderSelect();
+}
+
+// ═══════════════════════════════════════════
+// WIZARD
+// ═══════════════════════════════════════════
+let WIZ={step:0,data:null};
+const WIZ_STEPS=['İsim','Irk','Sınıf','Nitelikler','Beceriler','Önizleme','Görsel'];
+
+function startCreate(){
+  WIZ.step=0;
+  WIZ.data={name:'',race:'',cls:'',
+    stats:{guc:0,ceviklik:0,dayaniklilik:0,irade:0,karizma:0,zeka:0},
+    skills:{atletizm:0,akrobasi:0,gizlilik:0,elBecerisi:0,direnc:0,toparlanma:0,hafiza:0,analiz:0,zanaat:0,sezgi:0,empati:0,odak:0,yalan:0,gozdagi:0,performans:0,ikna:0},
+    image:null, humanBonusDone:false};
+  showScreen('scr-create');
+  renderWiz();
+}
+
+function wizBack(){
+  if(WIZ.step===0){renderSelect();return;}
+  WIZ.step--;renderWiz();
+}
+
+function wizNext(){
+  if(!wizValidate()) return;
+  if(WIZ.step===WIZ_STEPS.length-1){wizFinish();return;}
+  WIZ.step++;renderWiz();
+}
+
+function wizValidate(){
+  const d=WIZ.data;
+  if(WIZ.step===0&&!d.name.trim()){toast('İsim gerekli!');return false;}
+  if(WIZ.step===1&&!d.race){toast('Irk seç!');return false;}
+  if(WIZ.step===2&&d.race!=='Faunaril'&&!d.cls){toast('Sınıf seç!');return false;}
+  return true;
+}
+
+function renderWiz(){
+  const pct=((WIZ.step+1)/WIZ_STEPS.length)*100;
+  document.getElementById('wiz-prog').style.width=pct+'%';
+  document.getElementById('wiz-step-title').textContent=WIZ_STEPS[WIZ.step];
+  document.getElementById('wiz-step-ind').textContent=`${WIZ.step+1}/${WIZ_STEPS.length}`;
+  const nextBtn=document.getElementById('wiz-next-btn');
+  nextBtn.textContent=WIZ.step===WIZ_STEPS.length-1?'Oluştur':'İleri';
+
+  const body=document.getElementById('wiz-body');
+  const d=WIZ.data;
+
+  if(WIZ.step===0){
+    body.innerHTML=`
+      <div class="wiz-title-big">Karakterinin adı ne?</div>
+      <div class="wiz-desc">Bu isim karakterinin kimliğini tanımlar.</div>
+      <div class="wiz-field">
+        <label>Karakter Adı</label>
+        <input type="text" id="wiz-name" value="${d.name}" placeholder="Adını gir..." oninput="WIZ.data.name=this.value" maxlength="30">
+      </div>`;
+    setTimeout(()=>document.getElementById('wiz-name')?.focus(),100);
+
+  } else if(WIZ.step===1){
+    let cards='';
+    Object.entries(RACES).forEach(([rk,rv])=>{
+      cards+=`<div class="race-card ${d.race===rk?'selected':''}" onclick="selectRace('${rk}')">
+        <div class="race-card-name">${rk}</div>
+        <div class="race-card-pts">Stat: ${rv.statPts} | Bec: ${rv.skillPts}</div>
+        ${rv.special?`<div class="race-card-bonus">${rv.special}</div>`:''}
+      </div>`;
+    });
+    const desc=d.race?`<div class="wiz-desc">${RACES[d.race].desc}</div>`:'';
+    body.innerHTML=`<div class="wiz-title-big">Irk seç</div>${desc}<div class="race-grid">${cards}</div>`;
+
+  } else if(WIZ.step===2){
+    const race=RACES[d.race];
+    if(race.classes&&race.classes.length===0){
+      body.innerHTML=`<div class="wiz-title-big">Sınıf</div><div class="wiz-desc">Faunaril ırkı sınıf seçmez. Stat bazlı ilerler.</div>`;
+      WIZ.data.cls='';
+    } else {
+      const available=race.classes===null?Object.keys(CLASSES):race.classes;
+      let cards='';
+      available.forEach(ck=>{
+        const cl=CLASSES[ck];
+        const isYatkin=race.classes===null||race.classes?.includes(ck);
+        cards+=`<div class="class-card ${d.cls===ck?'selected':''}" onclick="selectCls('${ck}')">
+          <div style="font-size:1.3rem">${cl.ico}</div>
+          <div class="class-card-name">${ck}</div>
+          <div class="class-card-sub">${isYatkin&&race.classes?'★ Yatkın (+2 bec.)':''}</div>
+        </div>`;
+      });
+      body.innerHTML=`<div class="wiz-title-big">Sınıf seç</div><div class="class-grid">${cards}</div>`;
+    }
+
+  } else if(WIZ.step===3){
+    const race=RACES[d.race];
+    let remaining=race.statPts;
+    STAT_KEYS.forEach(k=>remaining-=d.stats[k]);
+    let blocks='';
+    STAT_KEYS.forEach(k=>{
+      const v=d.stats[k];
+      const sign=v>0?'+':v<0?'':'+';
+      blocks+=`<div class="stat-dist-block">
+        <div class="stat-dist-name">${STAT_NAMES[k]}</div>
+        <div class="stat-dist-val">${v>0?'+':''}${v}</div>
+        <div class="stat-dist-btns">
+          <button class="stat-pm" onclick="wizStatChange('${k}',-1)">−</button>
+          <button class="stat-pm" onclick="wizStatChange('${k}',1)">+</button>
+        </div>
+      </div>`;
+    });
+    body.innerHTML=`
+      <div class="wiz-title-big">Nitelikleri dağıt</div>
+      <div class="wiz-desc">Statlar -10 ile +10 arasında olabilir. Birinden alıp diğerine verebilirsin.</div>
+      <div class="pts-counter">Kalan Puan: <span id="wiz-stat-pts">${remaining}</span></div>
+      <div class="stat-dist-grid">${blocks}</div>`;
+
+  } else if(WIZ.step===4){
+    const race=RACES[d.race];
+    const isYatkin=race.classes&&d.cls&&race.classes.includes(d.cls);
+    const bonusPts=isYatkin?2:0;
+    let remaining=race.skillPts+bonusPts;
+    SKILL_KEYS.forEach(k=>remaining-=d.skills[k]);
+    let rows='';
+    SKILL_KEYS.forEach(k=>{
+      const stat=SKILL_STAT[k];
+      rows+=`<div class="skill-dist-row">
+        <div class="skill-dist-name">${SKILL_NAMES[k]}</div>
+        <div class="skill-dist-stat">${stat.replace('+',' + ')}</div>
+        <button class="stat-pm" onclick="wizSkillChange('${k}',-1)">−</button>
+        <div class="skill-dist-val" id="wsk-${k}">${d.skills[k]>0?'+':''}${d.skills[k]}</div>
+        <button class="stat-pm" onclick="wizSkillChange('${k}',1)">+</button>
+      </div>`;
+    });
+    body.innerHTML=`
+      <div class="wiz-title-big">Becerileri dağıt</div>
+      <div class="wiz-desc">Toplam ${race.skillPts+bonusPts} puan${bonusPts>0?' (yatkın sınıf +2 dahil)':''}. Puan kullanmak zorunda değilsin.</div>
+      <div class="pts-counter">Kalan Puan: <span id="wiz-skill-pts">${remaining}</span></div>
+      <div class="skill-dist-list">${rows}</div>`;
+
+  } else if(WIZ.step===5){
+    const baseHp=calcHP({race:d.race,cls:d.cls,stats:d.stats});
+    const enerji=d.stats.guc+d.stats.ceviklik+d.stats.dayaniklilik;
+    const mana=Math.max(d.stats.irade,d.stats.zeka)*5;
+    const kd=Math.floor(10+d.stats.ceviklik*1.5);
+    body.innerHTML=`
+      <div class="wiz-title-big">${d.name} — ${d.race}${d.cls?' / '+d.cls:''}</div>
+      <div class="wiz-desc">Karakterinin temel değerleri:</div>
+      <div class="review-grid">
+        <div class="review-block"><div class="review-val">${baseHp}</div><div class="review-label">Başlangıç Can</div></div>
+        <div class="review-block"><div class="review-val">${enerji}</div><div class="review-label">Enerji</div></div>
+        <div class="review-block"><div class="review-val">${mana}</div><div class="review-label">Mana</div></div>
+        <div class="review-block"><div class="review-val">${kd}</div><div class="review-label">Kaçınma D.</div></div>
+        <div class="review-block"><div class="review-val">1</div><div class="review-label">Seviye</div></div>
+        <div class="review-block"><div class="review-val">${d.race}</div><div class="review-label">Irk</div></div>
+      </div>
+      <div class="wiz-desc" style="font-size:.72rem">Nitelikler ve beceriler sonradan sol üst panelden düzenlenebilir.</div>`;
+
+  } else if(WIZ.step===6){
+    const preview=d.image?`<img src="${d.image}" class="img-upload-preview" alt="">`:'<div style="font-size:3rem;margin-bottom:12px">👤</div>';
+    body.innerHTML=`
+      <div class="wiz-title-big">Karakter Görseli</div>
+      <div class="wiz-desc">İsteğe bağlı. Atlamak için "Oluştur" butonuna bas.</div>
+      <div class="img-upload-area" onclick="document.getElementById('wiz-img-inp').click()">
+        ${preview}
+        <div class="img-hint">${d.image?'Değiştirmek için dokun':'Fotoğraf seç'}</div>
+      </div>
+      <input type="file" id="wiz-img-inp" accept="image/*" style="display:none" onchange="handleWizImg(this)">`;
+  }
+}
+
+function selectRace(rk){
+  WIZ.data.race=rk;
+  WIZ.data.cls='';
+  WIZ.data.stats={guc:0,ceviklik:0,dayaniklilik:0,irade:0,karizma:0,zeka:0};
+  WIZ.data.skills={atletizm:0,akrobasi:0,gizlilik:0,elBecerisi:0,direnc:0,toparlanma:0,hafiza:0,analiz:0,zanaat:0,sezgi:0,empati:0,odak:0,yalan:0,gozdagi:0,performans:0,ikna:0};
+  renderWiz();
+}
+
+function selectCls(ck){WIZ.data.cls=ck;renderWiz();}
+
+function wizStatChange(key,delta){
+  const d=WIZ.data;
+  const race=RACES[d.race];
+  let remaining=race.statPts;
+  STAT_KEYS.forEach(k=>remaining-=d.stats[k]);
+  const newVal=d.stats[key]+delta;
+  if(newVal>10||newVal<-10) return;
+  if(delta>0&&remaining<=0){toast('Puan kalmadı!');return;}
+  d.stats[key]=newVal;
+  renderWiz();
+}
+
+function wizSkillChange(key,delta){
+  const d=WIZ.data;
+  const race=RACES[d.race];
+  const isYatkin=race.classes&&d.cls&&race.classes.includes(d.cls);
+  const total=race.skillPts+(isYatkin?2:0);
+  let remaining=total;
+  SKILL_KEYS.forEach(k=>remaining-=d.skills[k]);
+  const newVal=d.skills[key]+delta;
+  if(newVal<0) return;
+  if(delta>0&&remaining<=0){toast('Puan kalmadı!');return;}
+  d.skills[key]=newVal;
+  renderWiz();
+}
+
+function handleWizImg(inp){
+  if(!inp.files[0]) return;
+  compressImage(inp.files[0],400,(b64)=>{WIZ.data.image=b64;renderWiz();});
+}
+
+function wizFinish(){
+  const d=WIZ.data;
+  if(!d.name.trim()){toast('İsim gerekli!');return;}
+  const id=Date.now();
+  const ch=defChar(id);
+  ch.name=d.name.trim();
+  ch.race=d.race;
+  ch.cls=d.cls;
+  ch.stats={...d.stats};
+  ch.skills={...d.skills};
+  ch.image=d.image;
+  ch.level=1;
+  const baseHp=calcHP(ch);
+  ch.hp={cur:baseHp,max:baseHp};
+  const en=calcEnerji(ch);
+  ch.enerji={cur:en,max:en};
+  const mn=calcMana(ch);
+  ch.mana={cur:mn,max:mn};
+  APP.characters.push(ch);
+  APP.activeId=id;
+  saveApp();
+  renderMain();
+}
+
+// ═══════════════════════════════════════════
+// MAIN SCREEN
+// ═══════════════════════════════════════════
+let currentTab='karakter';
+let lastRoll={num:null,detail:'',isCrit:false,isFail:false};
+let combatState={advMode:'normal',modifier:0,selectedDie:20,selectedDmg:'kesici',useShield:false,selectedHandKey:'sagEl'};
+
+function renderMain(){
+  showScreen('scr-main');
+  renderHeader();
+  showTab(currentTab);
+}
+
+function renderHeader(){
+  const ch=getChar();if(!ch) return;
+  const av=ch.image?`<img src="${ch.image}" alt="">`:`<span style="font-size:.9rem">${ch.race?ch.race[0]:'?'}</span>`;
+  const hpPct=Math.max(0,Math.min(100,ch.hp.cur/ch.hp.max*100));
+  const hpColor=hpPct>60?'var(--hp-hi)':hpPct>30?'var(--hp-md)':'var(--hp-lo)';
+  const enPct=ch.enerji.max>0?Math.max(0,Math.min(100,ch.enerji.cur/ch.enerji.max*100)):0;
+  const mnPct=ch.mana.max>0?Math.max(0,Math.min(100,ch.mana.cur/ch.mana.max*100)):0;
+  document.getElementById('main-header').innerHTML=`
+    <button class="hdr-avatar-btn" onclick="openPanel()">${av}</button>
+    <div class="hdr-info">
+      <div class="hdr-name">${ch.name}</div>
+      <div class="hdr-sub">${ch.race||''}${ch.cls?' • '+ch.cls:''} • Sev.${ch.level}</div>
+    </div>
+    <div class="hdr-vitals">
+      <div class="hdr-hp-row">
+        <div class="hdr-bar"><div class="hdr-bar-fill" style="width:${hpPct}%;background:${hpColor}"></div></div>
+        <div class="hdr-val">${ch.hp.cur}/${ch.hp.max}</div>
+      </div>
+      <div class="hdr-hp-row">
+        <div class="hdr-bar"><div class="hdr-bar-fill" style="width:${enPct}%;background:var(--en-col)"></div></div>
+        <div class="hdr-val" style="color:var(--en-col);opacity:.9">${ch.enerji.cur}</div>
+      </div>
+      <div class="hdr-hp-row">
+        <div class="hdr-bar"><div class="hdr-bar-fill" style="width:${mnPct}%;background:var(--mn-col)"></div></div>
+        <div class="hdr-val" style="color:var(--mn-col);opacity:.9">${ch.mana.cur}</div>
+      </div>
+    <button onclick="backToSelect()" style="color:var(--ash);font-size:1.1rem;padding:4px 6px;flex-shrink:0" title="Karakter Seç">⌂</button>
+    </div>`;
+}
+
+function backToSelect(){APP.activeId=null;renderSelect();}
+
+function showTab(tabId){
+  currentTab=tabId;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+tabId).classList.add('active');
+  document.querySelector(`.nav-btn[data-tab="${tabId}"]`)?.classList.add('active');
+  if(tabId==='karakter') renderKarakTab();
+  if(tabId==='zirh') renderZirhTab();
+  if(tabId==='envanter') renderEnvanterTab();
+  if(tabId==='notlar') renderNotlarTab();
+  if(tabId==='bilgi') renderBilgiTab();
+}
+
+// ═══════════════════════════════════════════
+// PANEL (LEFT OVERLAY)
+// ═══════════════════════════════════════════
+function openPanel(){
+  document.getElementById('panel-overlay').classList.add('open');
+  renderPanel();
+}
+
+function closePanel(){document.getElementById('panel-overlay').classList.remove('open');}
+
+function renderPanel(){
+  const ch=getChar();if(!ch) return;
+  const bgStyle=ch.image?`background-image:url('${ch.image}');background-size:cover;background-position:center`:'background:var(--surf)';
+  const av=ch.image?`<img src="${ch.image}" alt="">`:`<span style="font-size:2rem">${ch.race?ch.race[0]:'?'}</span>`;
+
+  let statsHtml='';
+  STAT_KEYS.forEach(k=>{
+    const v=ch.stats[k];
+    statsHtml+=`<div class="panel-stat" onclick="openStatEdit('${k}')">
+      <div class="panel-stat-name">${STAT_NAMES[k]}</div>
+      <div class="panel-stat-val">${v>0?'+':''}${v}</div>
+    </div>`;
+  });
+
+  let skillsHtml='';
+  SKILL_KEYS.forEach(k=>{
+    const v=ch.skills[k];
+    skillsHtml+=`<div class="panel-skill-row" onclick="openSkillEdit('${k}')">
+      <div class="panel-skill-name">${SKILL_NAMES[k]}</div>
+      <div class="panel-skill-stat">${SKILL_STAT[k]}</div>
+      <div class="panel-skill-val">${v>0?'+':''}${v}</div>
+    </div>`;
+  });
+
+  const hpPct=Math.max(0,Math.min(100,ch.hp.cur/ch.hp.max*100));
+  const enPct=ch.enerji.max>0?Math.max(0,Math.min(100,ch.enerji.cur/ch.enerji.max*100)):0;
+  const mnPct=ch.mana.max>0?Math.max(0,Math.min(100,ch.mana.cur/ch.mana.max*100)):0;
+  const hpColor=hpPct>60?'var(--hp-hi)':hpPct>30?'var(--hp-md)':'var(--hp-lo)';
+
+  let practicesHtml='';
+  (ch.practices||[]).forEach((p,i)=>{
+    const pct=p.max>0?Math.min(100,(p.cur/p.max)*100):0;
+    practicesHtml+=`<div class="practice-item">
+      <div class="practice-name-row">
+        <div class="practice-name">${p.name}</div>
+        <button class="practice-del" onclick="deletePractice(${i})">✕</button>
+      </div>
+      <div class="practice-prog-row">
+        <div class="practice-bar"><div class="practice-bar-fill" style="width:${pct}%"></div></div>
+        <input class="practice-inp" type="number" value="${p.cur}" min="0" onchange="updatePractice(${i},'cur',this.value)">
+        <div class="practice-slash">/</div>
+        <input class="practice-inp" type="number" value="${p.max}" min="1" onchange="updatePractice(${i},'max',this.value)">
+      </div>
+    </div>`;
+  });
+
+  document.getElementById('panel-box').innerHTML=`
+    <div class="panel-hero">
+      <div class="panel-hero-bg" style="${bgStyle}"></div>
+      <div class="panel-hero-content">
+        <div class="panel-avatar" onclick="openImageEdit()">${av}</div>
+        <div class="panel-char-name">${ch.name}</div>
+        <div class="panel-char-sub">${ch.race||''}${ch.cls?' • '+ch.cls:''}</div>
+      </div>
+      <button class="panel-close" onclick="closePanel()">✕</button>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-sec-title">Seviye & Can</div>
+      <div class="panel-lvl-row">
+        <span style="font-size:.7rem;color:var(--ash)">Seviye</span>
+        <span class="panel-lvl-val">${ch.level}</span>
+        <button onclick="levelDown()" style="padding:6px 10px;border-radius:5px;border:1px solid var(--bord);color:var(--ash);font-size:.75rem;margin-right:4px">−</button>
+        <button class="panel-lvl-up" onclick="levelUp()">Seviye Atla +</button>
+      </div>
+      <div class="panel-vital-row">
+        <div class="panel-vital-label">Can</div>
+        <div class="panel-vital-bar"><div class="panel-vital-fill" style="width:${hpPct}%;background:${hpColor}"></div></div>
+        <div class="panel-vital-nums">${ch.hp.cur}/${ch.hp.max}</div>
+      </div>
+      <div class="panel-vital-edit">
+        <label>Max Can:</label>
+        <input type="number" value="${ch.hp.max}" min="1" onchange="setMaxHP(this.value)" style="width:65px;text-align:center;padding:5px">
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-sec-title">Enerji & Mana</div>
+      <div class="panel-vital-row">
+        <div class="panel-vital-label" style="color:var(--en-col)">Enerji</div>
+        <div class="panel-vital-bar"><div class="panel-vital-fill" style="width:${enPct}%;background:var(--en-col)"></div></div>
+        <div class="panel-vital-nums" style="color:var(--en-col)">${ch.enerji.cur}/${ch.enerji.max}</div>
+      </div>
+      <div class="panel-vital-edit">
+        <label>Max Enerji:</label>
+        <input type="number" value="${ch.enerji.max}" min="0" onchange="setMaxEnerji(this.value)" style="width:65px;text-align:center;padding:5px">
+      </div>
+      <div style="margin-top:8px">
+      <div class="panel-vital-row">
+        <div class="panel-vital-label" style="color:var(--mn-col)">Mana</div>
+        <div class="panel-vital-bar"><div class="panel-vital-fill" style="width:${mnPct}%;background:var(--mn-col)"></div></div>
+        <div class="panel-vital-nums" style="color:var(--mn-col)">${ch.mana.cur}/${ch.mana.max}</div>
+      </div>
+      <div class="panel-vital-edit">
+        <label>Max Mana:</label>
+        <input type="number" value="${ch.mana.max}" min="0" onchange="setMaxMana(this.value)" style="width:65px;text-align:center;padding:5px">
+      </div></div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-sec-title">Nitelikler <span style="color:var(--ash);font-size:.55rem">(düzenlemek için dokun)</span></div>
+      <div class="panel-stat-grid">${statsHtml}</div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-sec-title">Beceriler</div>
+      <div class="panel-skill-list">${skillsHtml}</div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-sec-title">Pratikler <span style="color:var(--ash);font-size:.55rem">(max 3)</span></div>
+      ${practicesHtml}
+      ${(ch.practices||[]).length<3?`<button class="add-practice-btn" onclick="addPractice()">+ Pratik Ekle</button>`:''}
+    </div>
+
+    <div style="padding:16px">
+      <button style="width:100%;padding:10px;border-radius:6px;border:1px solid var(--bord);color:var(--ash);font-size:.8rem" onclick="goToSelect()">← Karakter Seçimi</button>
+    </div>`;
+}
+
+function goToSelect(){closePanel();renderSelect();}
+
+function setMaxHP(v){const ch=getChar();if(!ch) return;const n=parseInt(v);if(n>0){ch.hp.max=n;ch.hp.cur=Math.min(ch.hp.cur,n);saveApp();renderHeader();renderPanel();}}
+function setMaxEnerji(v){const ch=getChar();if(!ch) return;const n=parseInt(v)||0;ch.enerji.max=n;ch.enerji.cur=Math.min(ch.enerji.cur,n);saveApp();renderHeader();renderPanel();}
+function setMaxMana(v){const ch=getChar();if(!ch) return;const n=parseInt(v)||0;ch.mana.max=n;ch.mana.cur=Math.min(ch.mana.cur,n);saveApp();renderHeader();renderPanel();}
+
+function levelUp(){
+  const ch=getChar();if(!ch) return;
+  if(ch.level>=10){toast('Maksimum seviye 10!');return;}
+  const cl=CLASSES[ch.cls];
+  const die=cl?cl.die:4;
+  const minHp=cl?cl.minHp:2;
+  const dayMod=ch.stats.dayaniklilik;
+  const minGain=Math.max(1,minHp+dayMod);
+  const maxGain=Math.max(minGain,die+dayMod);
+  openModal(`
+    <div class="modal-title">Seviye Atla — ${ch.level} → ${ch.level+1}</div>
+    <div style="background:var(--surf);border:1px solid var(--bord2);border-radius:8px;padding:14px;margin-bottom:14px;text-align:center">
+      <div style="font-size:.7rem;color:var(--ash);margin-bottom:6px">HP zarı:</div>
+      <div style="font-size:1.6rem;font-weight:bold;color:var(--fire)">D${die} + ${dayMod>=0?'+':''}${dayMod} DAY</div>
+      <div style="font-size:.7rem;color:var(--ash);margin-top:4px">Min: ${minGain} | Maks: ${maxGain}</div>
+    </div>
+    <div class="modal-field">
+      <label>Zar Sonucu</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="number" id="m-hp-gain" min="1" placeholder="Sonucu gir..." style="flex:1">
+        <button onclick="rollLevelDie(${die},${dayMod},${minGain})" style="padding:9px 14px;border-radius:6px;border:1px solid var(--ember);background:rgba(196,112,24,.2);color:var(--fire);font-size:.85rem;flex-shrink:0">🎲 Zar At</button>
+      </div>
+    </div>
+    <div id="lvl-roll-res" style="text-align:center;min-height:28px;font-size:.8rem;color:var(--scroll);margin-bottom:4px"></div>
+    <div class="modal-btns">
+      <button class="modal-ok" onclick="confirmLevelUp(${minGain})">Onayla</button>
+      <button class="modal-cancel" onclick="closeModal()">İptal</button>
+    </div>`);
+}
+
+function rollLevelDie(die,dayMod,minGain){
+  const r=Math.floor(Math.random()*die)+1;
+  const total=Math.max(minGain,r+dayMod);
+  const inp=document.getElementById('m-hp-gain');
+  const res=document.getElementById('lvl-roll-res');
+  if(inp) inp.value=total;
+  if(res) res.innerHTML=`<span style="color:var(--fire);font-size:1rem;font-weight:bold">+${total} Can</span> <span style="color:var(--ash)">(D${die}: ${r}${dayMod!==0?' '+(dayMod>0?'+':'')+dayMod:''})</span>`;
+}
+
+function confirmLevelUp(minGain){
+  const ch=getChar();if(!ch) return;
+  const raw=parseInt(document.getElementById('m-hp-gain')?.value)||minGain;
+  const gain=Math.max(minGain,raw);
+  ch.level+=1;
+  ch.hp.max+=gain;
+  ch.hp.cur+=gain;
+  saveApp();closeModal();renderHeader();renderPanel();toast(`Seviye ${ch.level}! +${gain} Can`);
+}
+
+function levelDown(){
+  const ch=getChar();if(!ch) return;
+  if(ch.level<=1){toast('Minimum seviye 1!');return;}
+  openModal(`
+    <div class="modal-title">Seviye Düşür</div>
+    <div style="font-size:.82rem;color:var(--scroll);margin-bottom:14px">Seviye ${ch.level} → ${ch.level-1} olacak. Kaybedilecek HP miktarını gir.</div>
+    <div class="modal-field"><label>Kaybedilen Can (0 girersen sadece seviye düşer)</label><input type="number" id="m-hp-lose" value="0" min="0"></div>
+    <div class="modal-btns">
+      <button class="modal-ok" onclick="confirmLevelDown()">Onayla</button>
+      <button class="modal-cancel" onclick="closeModal()">İptal</button>
+    </div>`);
+}
+
+function confirmLevelDown(){
+  const ch=getChar();if(!ch) return;
+  const lose=parseInt(document.getElementById('m-hp-lose')?.value)||0;
+  ch.level-=1;
+  ch.hp.max=Math.max(1,ch.hp.max-lose);
+  ch.hp.cur=Math.min(ch.hp.cur,ch.hp.max);
+  saveApp();closeModal();renderHeader();renderPanel();toast(`Seviye ${ch.level}'e düşürüldü`);
+}
+
+function addPractice(){
+  openModal(`
+    <div class="modal-title">Pratik Ekle</div>
+    <div class="modal-field"><label>Pratik Adı</label><input type="text" id="m-pname" placeholder="Kılıç Dövüşü, Okçuluk..."></div>
+    <div class="modal-row">
+      <div class="modal-field"><label>Mevcut</label><input type="number" id="m-pcur" value="0" min="0"></div>
+      <div class="modal-field"><label>Hedef</label><input type="number" id="m-pmax" value="10" min="1"></div>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-ok" onclick="savePractice()">Ekle</button>
+      <button class="modal-cancel" onclick="closeModal()">İptal</button>
+    </div>`);
+}
+
+function savePractice(){
+  const ch=getChar();if(!ch) return;
+  const name=document.getElementById('m-pname').value.trim();
+  if(!name){toast('İsim gerekli!');return;}
+  if(!ch.practices) ch.practices=[];
+  ch.practices.push({name,cur:parseInt(document.getElementById('m-pcur').value)||0,max:parseInt(document.getElementById('m-pmax').value)||10});
+  saveApp();closeModal();renderPanel();
+}
+
+function updatePractice(i,field,val){
+  const ch=getChar();if(!ch) return;
+  ch.practices[i][field]=parseInt(val)||0;
+  saveApp();renderPanel();
+}
+
+function deletePractice(i){
+  const ch=getChar();if(!ch) return;
+  ch.practices.splice(i,1);
+  saveApp();renderPanel();
+}
+
+function openStatEdit(key){
+  const ch=getChar();if(!ch) return;
+  openModal(`
+    <div class="modal-title">${STAT_NAMES[key]} Düzenle</div>
+    <div class="modal-field"><label>Değer (-10 ile +10)</label><input type="number" id="m-sv" value="${ch.stats[key]}" min="-10" max="10"></div>
+    <div class="modal-btns">
+      <button class="modal-ok" onclick="saveStat('${key}')">Kaydet</button>
+      <button class="modal-cancel" onclick="closeModal()">İptal</button>
+    </div>`);
+}
+
+function saveStat(key){
+  const ch=getChar();if(!ch) return;
+  const v=parseInt(document.getElementById('m-sv').value);
+  if(!isNaN(v)&&v>=-10&&v<=10){ch.stats[key]=v;saveApp();renderHeader();renderPanel();showTab(currentTab);}
+  closeModal();
+}
+
+function openSkillEdit(key){
+  const ch=getChar();if(!ch) return;
+  openModal(`
+    <div class="modal-title">${SKILL_NAMES[key]} Düzenle</div>
+    <div class="modal-field"><label>Değer</label><input type="number" id="m-skv" value="${ch.skills[key]}" min="-10" max="10"></div>
+    <div class="modal-btns">
+      <button class="modal-ok" onclick="saveSkill('${key}')">Kaydet</button>
+      <button class="modal-cancel" onclick="closeModal()">İptal</button>
+    </div>`);
+}
+
+function saveSkill(key){
+  const ch=getChar();if(!ch) return;
+  const v=parseInt(document.getElementById('m-skv').value);
+  if(!isNaN(v)){ch.skills[key]=v;saveApp();renderPanel();showTab(currentTab);}
+  closeModal();
+}
+
+function openImageEdit(){
+  openModal(`
+    <div class="modal-title">Karakter Görseli</div>
+    <div class="img-upload-area" onclick="document.getElementById('panel-img-inp').click()" style="padding:20px">
+      <div class="img-hint">Fotoğraf seç veya değiştir</div>
+    </div>
+    <input type="file" id="panel-img-inp" accept="image/*" style="display:none" onchange="handlePanelImg(this)">
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="closeModal()">Kapat</button>
+    </div>`);
+}
+
+function handlePanelImg(inp){
+  if(!inp.files[0]) return;
+  compressImage(inp.files[0],400,(b64)=>{
+    const ch=getChar();if(!ch) return;
+    ch.image=b64;saveApp();closeModal();renderPanel();renderHeader();
+  });
+}
+
+// ═══════════════════════════════════════════
+// KARAKTER TAB
+// ═══════════════════════════════════════════
+function renderKarakTab(){
+  const ch=getChar();if(!ch) return;
+  const kd=calcKD(ch);
+  const totalArmor=getEquipResist(ch,'kesici');
+  const shieldBlock=getShieldBlock(ch);
+
+  let statsHtml='';
+  STAT_KEYS.forEach(k=>{
+    const base=ch.stats[k];
+    const eqMod=getEquipStatMod(ch,k);
+    const v=base+eqMod;
+    const modHint=eqMod!==0?`<div class="stat-hint" style="color:var(--gold)">${base>0?'+':''}${base}${eqMod>=0?' +':' '}${eqMod}</div>`:`<div class="stat-hint">Zarla</div>`;
+    statsHtml+=`<div class="stat-block" onclick="rollStat('${k}')">
+      <div class="stat-name">${STAT_NAMES[k]}</div>
+      <div class="stat-val">${v>0?'+':''}${v}</div>
+      ${modHint}
+    </div>`;
+  });
+
+  let skillsHtml='';
+  SKILL_KEYS.forEach(k=>{
+    const v=ch.skills[k];
+    skillsHtml+=`<div class="skill-row" onclick="rollSkill('${k}')">
+      <div class="skill-name">${SKILL_NAMES[k]}</div>
+      <div class="skill-stat-tag">${SKILL_STAT[k]}</div>
+      <div class="skill-val">${v>0?'+':''}${v}</div>
+    </div>`;
+  });
+
+  const roll=lastRoll;
+  const rollHtml=roll.num!==null?`
+    <div class="roll-num ${roll.isCrit?'crit':roll.isFail?'fail':''} roll-anim">${roll.num}</div>
+    <div class="roll-detail">${roll.detail}</div>
+    ${roll.isCrit?'<div class="roll-ctx crit">⚡ KRİTİK VURUŞ!</div>':roll.isFail?'<div class="roll-ctx fail">💀 FİYASKO!</div>':''}
+  `:'<div style="color:var(--ash);font-size:.8rem">Stat veya beceriye dokun</div>';
+
+  document.getElementById('tab-karakter').innerHTML=`
+    <div class="kd-strip">
+      <div class="kd-block"><div class="kd-val">${kd}</div><div class="kd-label">Kaçınma D.</div></div>
+      <div class="kd-block"><div class="kd-val">${shieldBlock}%</div><div class="kd-label">Kalkan Blok</div></div>
+    </div>
+
+    <div class="vital-panel">
+      <div class="vital-title">Can · Enerji · Mana</div>
+      <div class="vital-row">
+        <div class="vital-icon">❤</div>
+        <div class="vital-bar-wrap">
+          <div class="vital-bar"><div class="vital-bar-fill" id="hp-fill" style="width:${Math.max(0,Math.min(100,ch.hp.cur/ch.hp.max*100))}%;background:${ch.hp.cur/ch.hp.max>0.6?'var(--hp-hi)':ch.hp.cur/ch.hp.max>0.3?'var(--hp-md)':'var(--hp-lo)'}"></div></div>
+          <div class="vital-nums">${ch.hp.cur} / ${ch.hp.max}</div>
+        </div>
+        <div class="vital-ctrl">
+          <button class="vital-btn" onclick="adjustVital('hp',-1)">−</button>
+          <input class="vital-input" type="number" value="${ch.hp.cur}" onchange="setVital('hp',this.value)">
+          <button class="vital-btn" onclick="adjustVital('hp',1)">+</button>
+        </div>
+      </div>
+      <div class="vital-row">
+        <div class="vital-icon">⚡</div>
+        <div class="vital-bar-wrap">
+          <div class="vital-bar"><div class="vital-bar-fill" style="width:${ch.enerji.max>0?Math.max(0,Math.min(100,ch.enerji.cur/ch.enerji.max*100)):0}%;background:var(--en-col)"></div></div>
+          <div class="vital-nums" style="color:var(--en-col)">${ch.enerji.cur} / ${ch.enerji.max}</div>
+        </div>
+        <div class="vital-ctrl">
+          <button class="vital-btn" onclick="adjustVital('enerji',-1)">−</button>
+          <input class="vital-input" type="number" value="${ch.enerji.cur}" onchange="setVital('enerji',this.value)">
+          <button class="vital-btn" onclick="adjustVital('enerji',1)">+</button>
+        </div>
+      </div>
+      <div class="vital-row">
+        <div class="vital-icon">🔮</div>
+        <div class="vital-bar-wrap">
+          <div class="vital-bar"><div class="vital-bar-fill" style="width:${ch.mana.max>0?Math.max(0,Math.min(100,ch.mana.cur/ch.mana.max*100)):0}%;background:var(--mn-col)"></div></div>
+          <div class="vital-nums" style="color:var(--mn-col)">${ch.mana.cur} / ${ch.mana.max}</div>
+        </div>
+        <div class="vital-ctrl">
+          <button class="vital-btn" onclick="adjustVital('mana',-1)">−</button>
+          <input class="vital-input" type="number" value="${ch.mana.cur}" onchange="setVital('mana',this.value)">
+          <button class="vital-btn" onclick="adjustVital('mana',1)">+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="action-strip">
+      <button class="action-btn act-saldiri" onclick="openSaldiriModal()">⚔ Saldır</button>
+      <button class="action-btn act-hasar-al" onclick="openHasarAlModal()">🛡 Hasar Al</button>
+      <button class="action-btn act-hasar-ver" onclick="openHasarVerModal()">💥 Hasar Ver</button>
+    </div>
+
+    <div class="roll-box">${rollHtml}</div>
+
+    <div class="stats-panel">
+      <div class="panel-title-bar">Nitelikler <span style="color:var(--ash);font-size:.55rem">(zarlamak için dokun)</span></div>
+      <div class="stat-grid-6">${statsHtml}</div>
+      <div class="panel-title-bar">Beceriler</div>
+      <div class="skill-list">${skillsHtml}</div>
+    </div>`;
+}
+
+function adjustVital(key,delta){
+  const ch=getChar();if(!ch) return;
+  ch[key].cur=Math.max(0,Math.min(ch[key].max,ch[key].cur+delta));
+  saveApp();renderHeader();renderKarakTab();
+}
+
+function setVital(key,val){
+  const ch=getChar();if(!ch) return;
+  const n=parseInt(val);
+  if(!isNaN(n)) ch[key].cur=Math.max(0,Math.min(ch[key].max,n));
+  saveApp();renderHeader();
+}
+
+function rollStat(key){
+  const ch=getChar();if(!ch) return;
+  const mod=ch.stats[key]+getEquipStatMod(ch,key);
+  doRoll(20,mod,`${STAT_NAMES[key]} D20`);
+}
+
+function rollSkill(key){
+  const ch=getChar();if(!ch) return;
+  const mod=ch.skills[key];
+  doRoll(20,mod,`${SKILL_NAMES[key]} D20`);
+}
+
+function doRoll(sides,mod,label){
+  const r=Math.floor(Math.random()*sides)+1;
+  const total=r+mod;
+  const isCrit=sides===20&&r===20;
+  const isFail=sides===20&&r===1;
+  const sign=mod>=0?'+':'';
+  lastRoll={num:total,detail:`${label}: ${r}${mod!==0?` ${sign}${mod}`:''} = ${total}`,isCrit,isFail};
+  renderKarakTab();
+}
+
+// ─── SALDIRI MODAL ───
+function openSaldiriModal(){
+  const ch=getChar();if(!ch) return;
+  const cs=combatState;
+  let advHtml=`<div class="adv-group">
+    <div class="adv-opt ${cs.advMode==='dis'?'active':''}" onclick="setAdv('dis')">Dezavantaj</div>
+    <div class="adv-opt ${cs.advMode==='normal'?'active':''}" onclick="setAdv('normal')">Normal</div>
+    <div class="adv-opt ${cs.advMode==='adv'?'active':''}" onclick="setAdv('adv')">Avantaj</div>
+  </div>`;
+  const handOpts=['solEl','sagEl'].map(k=>`<option value="${k}" ${cs.selectedHandKey===k?'selected':''}>${k==='solEl'?'Sol El':'Sağ El'} (${ch.equipment[k]?ch.equipment[k].name:'Boş'})</option>`).join('');
+  openModal(`
+    <div class="modal-title">Saldırı Zarı</div>
+    <div class="modal-field"><label>El</label><select onchange="combatState.selectedHandKey=this.value">${handOpts}</select></div>
+    ${advHtml}
+    <div class="mod-row">
+      <div class="mod-label-txt">Düzenleyici</div>
+      <button class="mod-btn-sm" onclick="changeMod(-1)">−</button>
+      <div class="mod-display" id="mod-disp">${cs.modifier>=0?'+':''}${cs.modifier}</div>
+      <button class="mod-btn-sm" onclick="changeMod(1)">+</button>
+    </div>
+    <div class="roll-result-mini" id="saldiri-result"><div style="color:var(--ash);font-size:.8rem">Saldırı zarını at</div></div>
+    <button class="big-roll-btn" onclick="rollSaldiri()">⚔ Saldır</button>
+    <div class="modal-btns" style="margin-top:8px">
+      <button class="modal-cancel" onclick="closeModal()">Kapat</button>
+    </div>`);
+}
+
+function setAdv(mode){combatState.advMode=mode;const btns=document.querySelectorAll('.adv-opt');btns.forEach(b=>{b.classList.remove('active');if((mode==='normal'&&b.textContent==='Normal')||(mode==='adv'&&b.textContent==='Avantaj')||(mode==='dis'&&b.textContent==='Dezavantaj'))b.classList.add('active');});}
+function changeMod(d){combatState.modifier=Math.max(-10,Math.min(10,combatState.modifier+d));const el=document.getElementById('mod-disp');if(el)el.textContent=(combatState.modifier>=0?'+':'')+combatState.modifier;}
+
+function rollSaldiri(){
+  const ch=getChar();if(!ch) return;
+  const cs=combatState;
+  const atBonus=getAttackBonus(ch,cs.selectedHandKey);
+  const totalMod=cs.modifier+atBonus;
+  let r1=Math.floor(Math.random()*20)+1;
+  let r2=Math.floor(Math.random()*20)+1;
+  let mainR=r1;
+  let detail=`D20: ${r1}`;
+  if(cs.advMode==='adv'){mainR=Math.max(r1,r2);detail=`D20 Avantaj: ${r1},${r2}→${mainR}`;}
+  else if(cs.advMode==='dis'){mainR=Math.min(r1,r2);detail=`D20 Dezavantaj: ${r1},${r2}→${mainR}`;}
+  const total=mainR+totalMod;
+  const isCrit=mainR===20;const isFail=mainR===1;
+  const sign=totalMod>=0?'+':'';
+  if(totalMod!==0) detail+=` ${sign}${totalMod} = ${total}`;
+  const res=document.getElementById('saldiri-result');
+  if(res){
+    res.innerHTML=`
+      <div class="roll-result-num ${isCrit?'crit':isFail?'fail':''}">${total}</div>
+      <div class="roll-result-detail">${detail}</div>
+      ${isCrit?'<div style="color:var(--crit);font-size:.8rem;margin-top:3px">⚡ KRİTİK!</div>':isFail?'<div style="color:var(--fail);font-size:.8rem;margin-top:3px">💀 FİYASKO!</div>':''}`;
+  }
+}
+
+// ─── HASAR AL MODAL ───
+const BODY_REGIONS=[
+  {k:'kafa',l:'Kafa',i:'🪖',slots:['bas']},
+  {k:'omuz',l:'Omuz',i:'🦾',slots:['omuzluk']},
+  {k:'gogus',l:'Göğüs',i:'🛡',slots:['gogusuk','pelerin']},
+  {k:'kol',l:'Kol',i:'💪',slots:['kolluk']},
+  {k:'bacak',l:'Bacak',i:'👖',slots:['pantolon']},
+  {k:'ayak',l:'Ayak',i:'👢',slots:['ayakkabi']},
+];
+let _selectedRegions=new Set();
+let _pendingHasar=0;
+let _pendingDurDamage=[];
+
+function openHasarAlModal(){
+  const ch=getChar();if(!ch) return;
+  _selectedRegions=new Set();
+  _pendingHasar=0;
+  _pendingDurDamage=[];
+  const hasShield=getShieldBlock(ch)>0;
+  let dmgGrid='';
+  DMG_TYPES.forEach(d=>{dmgGrid+=`<div class="dmg-type-btn ${combatState.selectedDmg===d.k?'selected':''}" onclick="selectDmg('${d.k}')">${d.i}<span>${d.l}</span></div>`;});
+  let regionGrid='';
+  BODY_REGIONS.forEach(r=>{
+    regionGrid+=`<div class="dmg-type-btn" id="reg-${r.k}" onclick="toggleRegion('${r.k}')" style="flex-direction:row;gap:4px;padding:8px">
+      <span>${r.i}</span><span>${r.l}</span>
+    </div>`;
+  });
+  openModal(`
+    <div class="modal-title">Hasar Al</div>
+    <div class="modal-field"><label>Hasar Türü</label><div class="dmg-type-grid" id="dmg-grid-al">${dmgGrid}</div></div>
+    <div class="modal-field"><label>Vurulan Bölge(ler) — birden fazla seçilebilir</label>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px" id="region-grid">${regionGrid}</div>
+    </div>
+    <div class="modal-field"><label>Gelen Hasar</label><input type="number" id="m-raw-dmg" placeholder="Hasar miktarı" min="0"></div>
+    ${hasShield?`<div class="shield-toggle">
+      <div class="shield-toggle-label">🛡 Kalkanla Blokla (%${getShieldBlock(ch)})</div>
+      <div class="shield-toggle-btn ${combatState.useShield?'active':''}" onclick="toggleShield()" id="shield-tog-btn">${combatState.useShield?'Açık':'Kapalı'}</div>
+    </div>`:''}
+    <div class="hasar-result" id="hasar-al-result" style="display:none"></div>
+    <button class="big-roll-btn" style="background:linear-gradient(135deg,#6a1818,#9a2020)" onclick="calcHasarAl()">🛡 Hesapla</button>
+    <div class="modal-btns" style="margin-top:8px">
+      <button class="modal-ok" id="uygula-btn" style="display:none" onclick="applyHasar()">Hasarı Uygula</button>
+      <button class="modal-cancel" onclick="closeModal()">İptal</button>
+    </div>`);
+}
+
+function toggleRegion(k){
+  if(_selectedRegions.has(k)) _selectedRegions.delete(k);
+  else _selectedRegions.add(k);
+  document.querySelectorAll('[id^="reg-"]').forEach(el=>{
+    const rk=el.id.replace('reg-','');
+    el.classList.toggle('selected',_selectedRegions.has(rk));
+  });
+}
+
+function toggleShield(){
+  combatState.useShield=!combatState.useShield;
+  const btn=document.getElementById('shield-tog-btn');
+  if(btn){btn.textContent=combatState.useShield?'Açık':'Kapalı';btn.classList.toggle('active',combatState.useShield);}
+}
+
+function selectDmg(k){
+  combatState.selectedDmg=k;
+  document.querySelectorAll('#dmg-grid-al .dmg-type-btn').forEach(b=>{b.classList.toggle('selected',b.getAttribute('onclick').includes(`'${k}'`));});
+}
+
+function calcHasarAl(){
+  const ch=getChar();if(!ch) return;
+  const raw=parseInt(document.getElementById('m-raw-dmg')?.value)||0;
+  if(raw<=0){toast('Hasar miktarı gir!');return;}
+  const dmgKey=combatState.selectedDmg;
+
+  // Seçilen bölgelerin slotlarını topla
+  let affectedSlots=[];
+  _selectedRegions.forEach(rk=>{
+    const reg=BODY_REGIONS.find(r=>r.k===rk);
+    if(reg) reg.slots.forEach(s=>{if(!affectedSlots.includes(s)) affectedSlots.push(s);});
+  });
+
+  // Toplam direnç: seçilen bölgelerin dirençlerini topla
+  let totalRes=0;
+  let resParts=[];
+  affectedSlots.forEach(slotKey=>{
+    const eq=ch.equipment[slotKey];
+    if(eq&&eq.resistances&&eq.resistances[dmgKey]){
+      const pct=eq.resistances[dmgKey];
+      totalRes+=pct;
+      resParts.push(`${eq.name}: %${pct}`);
+    }
+  });
+  totalRes=Math.min(totalRes,95);
+
+  // Kalkan
+  let afterArmor=raw*(1-totalRes/100);
+  let breakdown=`Ham: ${raw}`;
+  if(resParts.length>0) breakdown+=` → Zırh: ${resParts.join(', ')} = %${totalRes} direnç`;
+  else breakdown+=` → Zırh yok`;
+
+  let after=afterArmor;
+  if(combatState.useShield&&getShieldBlock(ch)>0){
+    const blockPct=getShieldBlock(ch);
+    after=afterArmor*(1-blockPct/100);
+    breakdown+=` → Kalkan: %${blockPct}`;
+  }
+
+  _pendingHasar=Math.ceil(after);
+  const blocked=raw-_pendingHasar;
+
+  // Dayanıklılık azaltma: engellenen hasar kadar, bölgeler arasında eşit dağıt
+  _pendingDurDamage=[];
+  if(blocked>0&&affectedSlots.length>0){
+    const durPerSlot=Math.ceil(blocked/affectedSlots.length);
+    affectedSlots.forEach(slotKey=>{
+      const eq=ch.equipment[slotKey];
+      if(eq&&eq.durability&&eq.durability.max>0){
+        _pendingDurDamage.push({slotKey,amount:durPerSlot});
+      }
+    });
+  }
+
+  const res=document.getElementById('hasar-al-result');
+  const btn=document.getElementById('uygula-btn');
+  if(res){
+    res.style.display='block';
+    let durText=_pendingDurDamage.length>0?`<div style="font-size:.68rem;color:var(--ash);margin-top:4px">Dayanıklılık: ${_pendingDurDamage.map(d=>{const eq=ch.equipment[d.slotKey];return eq?`${eq.name} −${d.amount}`:''}).filter(Boolean).join(', ')}</div>`:'';
+    res.innerHTML=`
+      <div class="hasar-result-raw">${breakdown}</div>
+      <div class="hasar-result-final">−${_pendingHasar} Can</div>
+      ${durText}`;
+  }
+  if(btn) btn.style.display='flex';
+}
+
+function applyHasar(){
+  const ch=getChar();if(!ch) return;
+  ch.hp.cur=Math.max(0,ch.hp.cur-_pendingHasar);
+  // Dayanıklılık azalt
+  _pendingDurDamage.forEach(({slotKey,amount})=>{
+    const eq=ch.equipment[slotKey];
+    if(eq&&eq.durability) eq.durability.cur=Math.max(0,eq.durability.cur-amount);
+  });
+  saveApp();renderHeader();closeModal();renderKarakTab();
+  if(ch.hp.cur===0) toast('⚠ Karakter düştü!');
+  else toast(`−${_pendingHasar} Can!`);
+}
+
+// ─── HASAR VER MODAL ───
+let _hasar_ver_result=null;
+function openHasarVerModal(){
+  let dmgGrid='';
+  DMG_TYPES.forEach(d=>{dmgGrid+=`<div class="dmg-type-btn ${combatState.selectedDmg===d.k?'selected':''}" onclick="selectDmgVer('${d.k}')">${d.i}<span>${d.l}</span></div>`;});
+  let diceGrid='';
+  DICE.forEach(d=>{diceGrid+=`<button class="die-btn ${combatState.selectedDie===d?'selected':''}" onclick="selectDie(${d})"><div class="die-icon-big">🎲</div><div>D${d}</div></button>`;});
+  let advHtml=`<div class="adv-group">
+    <div class="adv-opt ${combatState.advMode==='dis'?'active':''}" onclick="setAdv('dis')">Dezavantaj</div>
+    <div class="adv-opt ${combatState.advMode==='normal'?'active':''}" onclick="setAdv('normal')">Normal</div>
+    <div class="adv-opt ${combatState.advMode==='adv'?'active':''}" onclick="setAdv('adv')">Avantaj</div>
+  </div>`;
+  openModal(`
+    <div class="modal-title">Hasar Ver</div>
+    <div class="modal-field"><label>Hasar Türü</label><div class="dmg-type-grid" id="dmg-grid-ver">${dmgGrid}</div></div>
+    <div class="modal-field"><label>Hasar Zarı</label><div class="dice-btn-grid">${diceGrid}</div></div>
+    ${advHtml}
+    <div class="mod-row">
+      <div class="mod-label-txt">Düzenleyici</div>
+      <button class="mod-btn-sm" onclick="changeMod(-1)">−</button>
+      <div class="mod-display" id="mod-disp2">${combatState.modifier>=0?'+':''}${combatState.modifier}</div>
+      <button class="mod-btn-sm" onclick="changeMod2(1)">+</button>
+    </div>
+    <div class="cost-row">
+      <div class="cost-field"><label>Enerji Bedeli</label><input type="number" id="m-en-cost" value="0" min="0"></div>
+      <div class="cost-field"><label>Mana Bedeli</label><input type="number" id="m-mn-cost" value="0" min="0"></div>
+    </div>
+    <div class="roll-result-mini" id="ver-result"><div style="color:var(--ash);font-size:.8rem">Zarı at</div></div>
+    <button class="big-roll-btn" style="background:linear-gradient(135deg,#2a5a10,#408020)" onclick="rollHasarVer()">💥 Zar At & Uygula</button>
+    <div class="modal-btns" style="margin-top:8px">
+      <button class="modal-cancel" onclick="closeModal()">Kapat</button>
+    </div>`);
+}
+
+function selectDmgVer(k){combatState.selectedDmg=k;document.querySelectorAll('#dmg-grid-ver .dmg-type-btn').forEach(b=>{b.classList.toggle('selected',b.getAttribute('onclick').includes(`'${k}'`));});}
+function selectDie(d){combatState.selectedDie=d;document.querySelectorAll('.die-btn').forEach(b=>{b.classList.toggle('selected',b.getAttribute('onclick')===`selectDie(${d})`);});}
+function changeMod2(d){combatState.modifier=Math.max(-10,Math.min(10,combatState.modifier+d));const el=document.getElementById('mod-disp2');if(el)el.textContent=(combatState.modifier>=0?'+':'')+combatState.modifier;}
+
+function rollHasarVer(){
+  const ch=getChar();if(!ch) return;
+  const sides=combatState.selectedDie;
+  const cs=combatState;
+  let r1=Math.floor(Math.random()*sides)+1;
+  let r2=Math.floor(Math.random()*sides)+1;
+  let mainR=r1;
+  let detail=`D${sides}: ${r1}`;
+  if(cs.advMode==='adv'&&sides===20){mainR=Math.max(r1,r2);detail=`Avantaj: ${r1},${r2}→${mainR}`;}
+  else if(cs.advMode==='dis'&&sides===20){mainR=Math.min(r1,r2);detail=`Dezavantaj: ${r1},${r2}→${mainR}`;}
+  const total=mainR+cs.modifier;
+  const isCrit=sides===20&&mainR===20;
+  const isFail=sides===20&&mainR===1;
+  const sign=cs.modifier>=0?'+':'';
+  if(cs.modifier!==0) detail+=` ${sign}${cs.modifier} = ${total}`;
+  // Apply costs
+  const enCost=parseInt(document.getElementById('m-en-cost')?.value)||0;
+  const mnCost=parseInt(document.getElementById('m-mn-cost')?.value)||0;
+  if(enCost>0){ch.enerji.cur=Math.max(0,ch.enerji.cur-enCost);}
+  if(mnCost>0){ch.mana.cur=Math.max(0,ch.mana.cur-mnCost);}
+  saveApp();renderHeader();
+  const res=document.getElementById('ver-result');
+  if(res){
+    res.innerHTML=`
+      <div class="roll-result-num ${isCrit?'crit':isFail?'fail':''}">${total}</div>
+      <div class="roll-result-detail">${detail}${enCost>0?` • −${enCost} Enerji`:''}${mnCost>0?` • −${mnCost} Mana`:''}</div>
+      ${isCrit?'<div style="color:var(--crit);font-size:.8rem">⚡ KRİTİK!</div>':isFail?'<div style="color:var(--fail);font-size:.8rem">💀 FİYASKO!</div>':''}`;
+  }
+}
+
+// ═══════════════════════════════════════════
+// ZIRH TAB
+// ═══════════════════════════════════════════
+function renderZirhTab(){
+  const ch=getChar();if(!ch) return;
+  const charImg=ch.image?`<img src="${ch.image}" alt="" style="width:110px;height:180px;border-radius:8px;object-fit:cover;border:1px solid var(--bord2)">`:`<div style="width:110px;height:180px;border-radius:8px;background:var(--surf);border:1px solid var(--bord2);display:flex;align-items:center;justify-content:center;font-size:3rem;color:var(--ash)">👤</div>`;
+
+  // Build 7-row x 3-col grid
+  const grid=Array.from({length:7},()=>Array(3).fill(null));
+  EQUIP_SLOTS.forEach(s=>{grid[s.row-1][s.col-1]=s;});
+  grid[0][1]={k:'bas',l:'Baş',i:'⛑',t:'armor',isChar:false};
+  grid[1][1]='CHAR';
+
+  let rows='';
+  for(let r=0;r<7;r++){
+    rows+='<div style="display:contents">';
+    for(let c=0;c<3;c++){
+      const s=EQUIP_SLOTS.find(x=>x.row===r+1&&x.col===c+1);
+      if(c===1&&r>=1&&r<=5){
+        // center column: character image only on row 1-5 (handled separately)
+        if(r===1) rows+=`<div style="grid-column:2;grid-row:2/7;display:flex;align-items:center;justify-content:center">${charImg}</div>`;
+      } else if(s){
+        const eq=ch.equipment[s.k];
+        const durPct=eq&&eq.durability&&eq.durability.max>0?(eq.durability.cur/eq.durability.max*100):100;
+        const durColor=durPct>60?'var(--hp-hi)':durPct>25?'var(--hp-md)':'var(--hp-lo)';
+        rows+=`<div class="equip-slot ${eq?'equipped':''}" style="grid-column:${s.col};grid-row:${s.row}" onclick="openSlotModal('${s.k}')">
+          <div class="equip-slot-icon">${eq&&eq.image?`<img src="${eq.image}" style="width:28px;height:28px;border-radius:3px;object-fit:cover">`:s.i}</div>
+          <div class="equip-slot-label">${s.l}</div>
+          <div class="equip-slot-name ${eq?'':'empty'}">${eq?eq.name:'Boş'}</div>
+          ${eq&&eq.durability&&eq.durability.max>0?`<div class="equip-dur-bar"><div class="equip-dur-fill" style="width:${durPct}%;background:${durColor}"></div></div>`:''}
+        </div>`;
+      } else if(!(c===1&&r>=1&&r<=5)){
+        rows+=`<div style="grid-column:${c+1};grid-row:${r+1}"></div>`;
+      }
+    }
+    rows+='</div>';
+  }
+
+  // Armor summary
+  let sumHtml='';
+  DMG_TYPES.forEach(d=>{
+    const pct=getEquipResist(ch,d.k);
+    if(pct>0) sumHtml+=`<div class="armor-sum-row"><div class="armor-sum-type">${d.i} ${d.l}</div><div class="armor-sum-pct">%${pct}</div></div>`;
+  });
+
+  document.getElementById('tab-zirh').innerHTML=`
+    <div class="armor-summary">
+      <div class="armor-sum-title">Aktif Dirençler</div>
+      ${sumHtml||'<div style="font-size:.75rem;color:var(--ash)">Zırh yok</div>'}
+    </div>
+    <div class="equip-layout" style="grid-template-columns:1fr auto 1fr;grid-template-rows:repeat(7,auto);gap:6px;align-items:start">
+      ${rows}
+    </div>`;
+}
+
+function openSlotModal(slotKey){
+  const ch=getChar();if(!ch) return;
+  const slotDef=EQUIP_SLOTS.find(s=>s.k===slotKey);
+  const eq=ch.equipment[slotKey];
+  const isWeapon=slotDef.t==='weapon';
+  const isShield=eq&&eq.type==='shield';
+
+  let matHtml='';
+  if(!isWeapon){
+    const mats=MATS_ARMOR;
+    mats.forEach(m=>{matHtml+=`<div class="mat-opt ${eq&&eq.material===m.k?'selected':''}" onclick="selectMat('${m.k}')" id="mat-${m.k}">${m.l}</div>`;});
+    matHtml=`<div class="modal-field"><label>Malzeme (Dirençleri otomatik doldurur)</label><div class="mat-grid">${matHtml}</div></div>`;
+  }
+
+  let resistHtml='';
+  DMG_TYPES.forEach(d=>{
+    const cur=eq&&eq.resistances?eq.resistances[d.k]||0:0;
+    resistHtml+=`<div class="resist-row"><div class="resist-type">${d.i} ${d.l}</div><input class="resist-input" type="number" id="res-${d.k}" value="${cur}" min="0" max="100"></div>`;
+  });
+
+  let weaponHtml='';
+  if(isWeapon){
+    const dmgOpts=DMG_TYPES.map(d=>`<option value="${d.k}" ${eq&&eq.damageType===d.k?'selected':''}>${d.l}</option>`).join('');
+    const diceOpts=DICE.map(d=>`<option value="${d}" ${eq&&eq.damageDie===d?'selected':''}>${d}</option>`).join('');
+    weaponHtml=`
+      <div class="modal-row">
+        <div class="modal-field"><label>Hasar Zarı</label><select id="m-dmg-die">${diceOpts}</select></div>
+        <div class="modal-field"><label>Hasar Tipi</label><select id="m-dmg-type">${dmgOpts}</select></div>
+      </div>
+      <div class="modal-row">
+        <div class="modal-field"><label>Saldırı Bonusu</label><input type="number" id="m-atk-bonus" value="${eq?.attackBonus||0}"></div>
+        <div class="modal-field"><label>Hasar Bonusu</label><input type="number" id="m-dmg-bonus" value="${eq?.damageBonus||0}"></div>
+      </div>
+      <div class="modal-field">
+        <label>Bu Silah Kalkan mı?</label>
+        <select id="m-is-shield"><option value="0">Hayır</option><option value="1" ${eq&&eq.type==='shield'?'selected':''}>Evet (Kalkan)</option></select>
+      </div>
+      <div class="modal-field"><label>Kalkan Blok %</label><input type="number" id="m-block-pct" value="${eq?.blockPct||0}" min="0" max="100"></div>`;
+  }
+
+  let statModHtml='';
+  STAT_KEYS.forEach(k=>{
+    const cur=eq&&eq.statMods?eq.statMods[k]||0:0;
+    statModHtml+=`<div class="resist-row"><div class="resist-type">${STAT_NAMES[k]}</div><input class="resist-input" type="number" id="smod-${k}" value="${cur}" min="-10" max="10"></div>`;
+  });
+
+  openModal(`
+    <div class="modal-title">${slotDef.l} — ${eq?eq.name:'Boş'}</div>
+    <div class="modal-field"><label>Eşya Adı</label><input type="text" id="m-slot-name" value="${eq?.name||''}" placeholder="Eşya adı..."></div>
+    ${matHtml}
+    ${weaponHtml}
+    <div class="modal-field">
+      <label>Görsel</label>
+      <div style="display:flex;align-items:center;gap:8px">
+        ${eq?.image?`<img src="${eq.image}" style="width:40px;height:40px;border-radius:4px;object-fit:cover">`:''} 
+        <button style="padding:6px 12px;border:1px solid var(--bord2);border-radius:5px;color:var(--scroll);font-size:.75rem" onclick="document.getElementById('slot-img-inp').click()">Görsel Seç</button>
+      </div>
+      <input type="file" id="slot-img-inp" accept="image/*" style="display:none" onchange="handleSlotImg(this,'${slotKey}')">
+    </div>
+    ${(!isWeapon&&slotDef.t!=='acc')?`<div class="modal-field"><label>Dayanıklılık</label><div style="display:flex;gap:8px;align-items:center"><input type="number" id="m-dur-c" value="${eq?.durability?.cur||100}" min="0" style="width:70px;text-align:center"><span style="color:var(--ash)">/</span><input type="number" id="m-dur-m" value="${eq?.durability?.max||100}" min="1" style="width:70px;text-align:center"></div></div>`:''}
+    <div class="modal-field"><label>Direnç Yüzdeleri (%)</label><div class="resist-grid">${resistHtml}</div></div>
+    <div class="modal-field"><label>Stat Modifyerleri</label><div class="resist-grid">${statModHtml}</div></div>
+    <div class="modal-btns">
+      <button class="modal-ok" onclick="saveSlot('${slotKey}')">Kaydet</button>
+      ${eq?`<button class="modal-del" onclick="clearSlot('${slotKey}')">Temizle</button>`:''}
+      <button class="modal-cancel" onclick="closeModal()">İptal</button>
+    </div>`);
+}
+
+let _slotImgTemp={};
+function handleSlotImg(inp,slotKey){
+  if(!inp.files[0]) return;
+  compressImage(inp.files[0],300,(b64)=>{_slotImgTemp[slotKey]=b64;toast('Görsel seçildi');});
+}
+
+function selectMat(matKey){
+  const mat=MATS_ARMOR.find(m=>m.k===matKey);
+  if(!mat) return;
+  document.querySelectorAll('.mat-opt').forEach(el=>el.classList.remove('selected'));
+  document.getElementById('mat-'+matKey)?.classList.add('selected');
+  DMG_KEYS.forEach(dk=>{const inp=document.getElementById('res-'+dk);if(inp)inp.value=mat.r[dk]||0;});
+}
+
+function saveSlot(slotKey){
+  const ch=getChar();if(!ch) return;
+  const name=document.getElementById('m-slot-name')?.value.trim();
+  if(!name){toast('İsim gerekli!');return;}
+  const slotDef=EQUIP_SLOTS.find(s=>s.k===slotKey);
+  const resistances={};
+  DMG_KEYS.forEach(dk=>{resistances[dk]=parseInt(document.getElementById('res-'+dk)?.value)||0;});
+  const statMods={};
+  STAT_KEYS.forEach(k=>{statMods[k]=parseInt(document.getElementById('smod-'+k)?.value)||0;});
+  const eq={name,resistances,statMods};
+  if(_slotImgTemp[slotKey]) eq.image=_slotImgTemp[slotKey];
+  else if(ch.equipment[slotKey]?.image) eq.image=ch.equipment[slotKey].image;
+  if(slotDef.t==='weapon'){
+    const isShield=document.getElementById('m-is-shield')?.value==='1';
+    eq.type=isShield?'shield':'weapon';
+    eq.damageDie=parseInt(document.getElementById('m-dmg-die')?.value)||6;
+    eq.damageType=document.getElementById('m-dmg-type')?.value||'kesici';
+    eq.attackBonus=parseInt(document.getElementById('m-atk-bonus')?.value)||0;
+    eq.damageBonus=parseInt(document.getElementById('m-dmg-bonus')?.value)||0;
+    eq.blockPct=parseInt(document.getElementById('m-block-pct')?.value)||0;
+  } else {
+    eq.type='armor';
+    if(slotDef.t!=='acc'){
+      const durC=parseInt(document.getElementById('m-dur-c')?.value)||100;
+      const durM=parseInt(document.getElementById('m-dur-m')?.value)||100;
+      eq.durability={cur:durC,max:durM};
+    }
+  }
+  ch.equipment[slotKey]=eq;
+  delete _slotImgTemp[slotKey];
+  saveApp();closeModal();renderZirhTab();renderKarakTab();toast('Eşya kaydedildi');
+}
+
+function clearSlot(slotKey){
+  const ch=getChar();if(!ch) return;
+  ch.equipment[slotKey]=null;
+  saveApp();closeModal();renderZirhTab();renderKarakTab();toast('Slot temizlendi');
+}
+
+// ═══════════════════════════════════════════
+// ENVANTER TAB
+// ═══════════════════════════════════════════
+function renderEnvanterTab(){
+  const ch=getChar();if(!ch) return;
+  const inv=ch.inventory||[];
+  const totalW=inv.reduce((s,i)=>s+(parseFloat(i.weight)||0),0);
+  const maxW=50;
+  const wPct=Math.min(100,(totalW/maxW)*100);
+
+  let items='';
+  inv.forEach((item,i)=>{
+    const img=item.image?`<img src="${item.image}" alt="">`:'📦';
+    items+=`<div class="inv-item" onclick="openItemEdit(${i})">
+      <div class="inv-item-img">${item.image?`<img src="${item.image}" alt="" style="width:100%;height:100%;object-fit:cover">`:img}</div>
+      <div class="inv-item-name">${item.name}</div>
+      <div class="inv-item-weight">${item.weight}kg</div>
+    </div>`;
+  });
+  items+=`<div class="inv-add-cell" onclick="openAddItem()">+</div>`;
+
+  document.getElementById('tab-envanter').innerHTML=`
+    <div class="inv-weight-bar">
+      <div class="inv-weight-label">Yük</div>
+      <div class="inv-w-bar"><div class="inv-w-fill" style="width:${wPct}%"></div></div>
+      <div class="inv-w-nums">${totalW.toFixed(1)} / ${maxW}</div>
+    </div>
+    <div class="inv-grid">${items}</div>`;
+}
+
+function openAddItem(){
+  openModal(`
+    <div class="modal-title">Eşya Ekle</div>
+    <div class="modal-field"><label>Eşya Adı</label><input type="text" id="m-iname" placeholder="Eşya adı..."></div>
+    <div class="modal-field"><label>Açıklama / Özellikler</label><textarea id="m-idesc" placeholder="Eşyanın özellikleri..."></textarea></div>
+    <div class="modal-field"><label>Ağırlık (kg)</label><input type="number" id="m-iwt" value="0.5" min="0" step="0.1"></div>
+    <div class="modal-field">
+      <label>Görsel (İsteğe Bağlı)</label>
+      <button style="padding:8px 14px;border:1px solid var(--bord2);border-radius:5px;color:var(--scroll);font-size:.78rem" onclick="document.getElementById('item-img-inp').click()">Görsel Seç</button>
+      <input type="file" id="item-img-inp" accept="image/*" style="display:none" onchange="handleItemImg(this)">
+      <div id="item-img-prev" style="margin-top:6px"></div>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-ok" onclick="addItem()">Ekle</button>
+      <button class="modal-cancel" onclick="closeModal()">İptal</button>
+    </div>`);
+}
+
+let _itemImgTemp=null;
+function handleItemImg(inp){
+  if(!inp.files[0]) return;
+  compressImage(inp.files[0],300,(b64)=>{
+    _itemImgTemp=b64;
+    const prev=document.getElementById('item-img-prev');
+    if(prev) prev.innerHTML=`<img src="${b64}" style="width:50px;height:50px;border-radius:5px;object-fit:cover">`;
+  });
+}
+
+function addItem(){
+  const ch=getChar();if(!ch) return;
+  const name=document.getElementById('m-iname')?.value.trim();
+  if(!name){toast('İsim gerekli!');return;}
+  if(!ch.inventory) ch.inventory=[];
+  ch.inventory.push({name,desc:document.getElementById('m-idesc')?.value.trim()||'',weight:parseFloat(document.getElementById('m-iwt')?.value)||0,image:_itemImgTemp||null});
+  _itemImgTemp=null;
+  saveApp();closeModal();renderEnvanterTab();toast('Eşya eklendi');
+}
+
+function openItemEdit(i){
+  const ch=getChar();if(!ch) return;
+  const item=ch.inventory[i];
+  openModal(`
+    <div class="modal-title">${item.name}</div>
+    <div class="modal-field"><label>Ad</label><input type="text" id="m-iname2" value="${item.name}"></div>
+    <div class="modal-field"><label>Açıklama</label><textarea id="m-idesc2">${item.desc||''}</textarea></div>
+    <div class="modal-field"><label>Ağırlık</label><input type="number" id="m-iwt2" value="${item.weight}" min="0" step="0.1"></div>
+    ${item.image?`<img src="${item.image}" style="width:60px;height:60px;border-radius:5px;object-fit:cover;margin-bottom:8px">`:''}
+    <div class="modal-field">
+      <button style="padding:8px 14px;border:1px solid var(--bord2);border-radius:5px;color:var(--scroll);font-size:.78rem" onclick="document.getElementById('item-img-inp2').click()">Görsel Değiştir</button>
+      <input type="file" id="item-img-inp2" accept="image/*" style="display:none" onchange="handleItemImg2(this)">
+    </div>
+    <div class="modal-btns">
+      <button class="modal-ok" onclick="saveItem(${i})">Kaydet</button>
+      <button class="modal-del" onclick="deleteItem(${i})">Sil</button>
+      <button class="modal-cancel" onclick="closeModal()">İptal</button>
+    </div>`);
+}
+
+function handleItemImg2(inp){if(!inp.files[0]) return;compressImage(inp.files[0],300,(b64)=>{_itemImgTemp=b64;toast('Görsel seçildi');});}
+
+function saveItem(i){
+  const ch=getChar();if(!ch) return;
+  const item=ch.inventory[i];
+  item.name=document.getElementById('m-iname2')?.value.trim()||item.name;
+  item.desc=document.getElementById('m-idesc2')?.value.trim()||'';
+  item.weight=parseFloat(document.getElementById('m-iwt2')?.value)||0;
+  if(_itemImgTemp){item.image=_itemImgTemp;_itemImgTemp=null;}
+  saveApp();closeModal();renderEnvanterTab();
+}
+
+function deleteItem(i){const ch=getChar();if(!ch) return;ch.inventory.splice(i,1);saveApp();closeModal();renderEnvanterTab();toast('Eşya silindi');}
+
+// ═══════════════════════════════════════════
+// NOTLAR TAB
+// ═══════════════════════════════════════════
+function renderNotlarTab(){
+  const ch=getChar();if(!ch) return;
+  const notes=ch.notes||[];
+  let html='';
+  if(notes.length===0) html='<div class="empty-state">Henüz not yok</div>';
+  else notes.forEach((n,i)=>{
+    const img=n.image?`<div class="note-img-thumb"><img src="${n.image}" alt=""></div>`:`<div class="note-img-thumb">📝</div>`;
+    html+=`<div class="note-card" onclick="openNoteEdit(${i})">
+      <div class="note-card-header">
+        ${img}
+        <div class="note-title">${n.title||'Not'}</div>
+        <button class="note-del" onclick="deleteNote(event,${i})">✕</button>
+      </div>
+      ${n.text?`<div class="note-text">${n.text.substring(0,120)}${n.text.length>120?'...':''}</div>`:''}
+    </div>`;
+  });
+  document.getElementById('tab-notlar').innerHTML=html+`<button class="add-note-btn" onclick="openAddNote()">+ Not Ekle</button>`;
+}
+
+function openAddNote(){
+  _itemImgTemp=null;
+  openModal(`
+    <div class="modal-title">Not Ekle</div>
+    <div class="modal-field"><label>Başlık</label><input type="text" id="m-ntitle" placeholder="Not başlığı..."></div>
+    <div class="modal-field"><label>İçerik</label><textarea id="m-ntext" placeholder="Not içeriği..." style="min-height:100px"></textarea></div>
+    <div class="modal-field">
+      <button style="padding:8px 14px;border:1px solid var(--bord2);border-radius:5px;color:var(--scroll);font-size:.78rem" onclick="document.getElementById('note-img-inp').click()">Görsel Ekle</button>
+      <input type="file" id="note-img-inp" accept="image/*" style="display:none" onchange="handleItemImg(this)">
+      <div id="item-img-prev" style="margin-top:6px"></div>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-ok" onclick="addNote()">Ekle</button>
+      <button class="modal-cancel" onclick="closeModal()">İptal</button>
+    </div>`);
+}
+
+function addNote(){
+  const ch=getChar();if(!ch) return;
+  if(!ch.notes) ch.notes=[];
+  ch.notes.push({title:document.getElementById('m-ntitle')?.value.trim()||'Not',text:document.getElementById('m-ntext')?.value.trim()||'',image:_itemImgTemp||null});
+  _itemImgTemp=null;
+  saveApp();closeModal();renderNotlarTab();
+}
+
+function openNoteEdit(i){
+  const ch=getChar();if(!ch) return;
+  const n=ch.notes[i];
+  openModal(`
+    <div class="modal-title">${n.title}</div>
+    <div class="modal-field"><label>Başlık</label><input type="text" id="m-ntitle2" value="${n.title||''}"></div>
+    <div class="modal-field"><label>İçerik</label><textarea id="m-ntext2" style="min-height:120px">${n.text||''}</textarea></div>
+    ${n.image?`<img src="${n.image}" style="width:100%;border-radius:6px;margin-bottom:8px;max-height:150px;object-fit:cover">`:''}
+    <div class="modal-btns">
+      <button class="modal-ok" onclick="saveNote(${i})">Kaydet</button>
+      <button class="modal-del" onclick="deleteNoteModal(${i})">Sil</button>
+      <button class="modal-cancel" onclick="closeModal()">İptal</button>
+    </div>`);
+}
+
+function saveNote(i){
+  const ch=getChar();if(!ch) return;
+  const n=ch.notes[i];
+  n.title=document.getElementById('m-ntitle2')?.value.trim()||n.title;
+  n.text=document.getElementById('m-ntext2')?.value.trim()||'';
+  saveApp();closeModal();renderNotlarTab();
+}
+
+function deleteNote(e,i){e.stopPropagation();const ch=getChar();if(!ch) return;ch.notes.splice(i,1);saveApp();renderNotlarTab();}
+function deleteNoteModal(i){const ch=getChar();if(!ch) return;ch.notes.splice(i,1);saveApp();closeModal();renderNotlarTab();}
+
+// ═══════════════════════════════════════════
+// BİLGİ TAB
+// ═══════════════════════════════════════════
+function renderBilgiTab(){
+  document.getElementById('tab-bilgi').innerHTML=`
+    <div style="background:var(--card);border:1px solid var(--bord);border-radius:8px;padding:14px;margin-bottom:10px">
+      <div style="font-size:.7rem;color:var(--ember);text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--bord)">Uygulama Rehberi</div>
+      <div style="font-size:.8rem;color:var(--scroll);line-height:1.7">
+        <b style="color:var(--parch)">⌂ Geri Butonu</b> — Sağ üstteki ev simgesi ile karakter seçim ekranına dönersin.<br><br>
+        <b style="color:var(--parch)">👤 Sol Üst Panel</b> — Karakter avatarına basınca açılır. Buradan statları, becerileri, can/enerji/mana max değerlerini, pratikleri ve seviyeni düzenleyebilirsin.<br><br>
+        <b style="color:var(--parch)">⚔ Karakter Sekmesi</b> — Statlara ve becerilere dokunarak D20 zarı atarsın. Modifiyerin otomatik eklenir. Kuşandığın ekipmandan gelen stat bonusları da dahil edilir (altında küçük gösterim vardır).<br><br>
+        <b style="color:var(--parch)">⚔ Saldır</b> — D20 atar, isabet edip etmediğini kontrol edersin. El seçimi ve modifiye eklenebilir.<br><br>
+        <b style="color:var(--parch)">💥 Hasar Ver</b> — Zar seç, hasar türü seç, modifiye ekle, enerji/mana bedeli gir ve zar at. Bedel otomatik düşülür.<br><br>
+        <b style="color:var(--parch)">🛡 Hasar Al</b> — Gelen hasarı ve türünü gir. Kuşandığın zırhların dirençleri otomatik hesaplanır. Kalkanın varsa blok seçeneği çıkar. "Hasarı Uygula" ile canın düşer.<br><br>
+        <b style="color:var(--parch)">🛡 Zırh Sekmesi</b> — 13 ekipman slotu. Her slota tıklayarak eşya eklersin. Malzeme seçince dirençler otomatik gelir, değiştirebilirsin. Stat modifyeri de eklenebilir.<br><br>
+        <b style="color:var(--parch)">⚗ Envanter</b> — Taşınan eşyalar. Kuşanmakla ilgisi yok, sadece çantanda ne var gösterir.<br><br>
+        <b style="color:var(--parch)">📜 Notlar</b> — Serbest not alanı. Görsel de eklenebilir.<br><br>
+        <b style="color:var(--parch)">Pratik Sistemi</b> — Sol üst panelden pratik eklersin. GM'in belirlediği hedefi yazarsın (örn: 0/10). Her oturumda GM'in dediği kadar ilerletirsin. 10/10 olunca ilgili zarına +1 eklersin (zar atarken modifiyere kendin ekle).
+      </div>
+    </div>
+
+    <div style="background:var(--card);border:1px solid var(--bord);border-radius:8px;padding:14px;margin-bottom:10px">
+      <div style="font-size:.7rem;color:var(--ember);text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--bord)">Temel Mekanikler</div>
+      <div style="font-size:.8rem;color:var(--scroll);line-height:1.7">
+        <b style="color:var(--parch)">Statlar</b> — 0'dan başlar, -10 ile +10 arası. Stat değeri direkt zar modifiyeridir (Güç 3 = D20+3).<br><br>
+        <b style="color:var(--parch)">Kaçınma Değeri (KD)</b> — 10 + (Çeviklik × 1.5) formülü. Saldırı zarı bu değere ulaşırsa isabet eder.<br><br>
+        <b style="color:var(--parch)">Enerji</b> — Güç + Çeviklik + Dayanıklılık toplamı. Fiziksel eylemler için harcanır.<br><br>
+        <b style="color:var(--parch)">Mana</b> — MAX(İrade, Zeka) × 5. Büyüsel eylemler için harcanır.<br><br>
+        <b style="color:var(--parch)">Hasar Hesabı</b> — Gelen Hasar × (1 - Zırh%) × (1 - Kalkan%). Her hasar türünün ayrı direnci vardır.<br><br>
+        <b style="color:var(--parch)">Seviye</b> — 1-10 arası. Tek seviyelerde stat puanı, çift seviyelerde beceri puanı kazanılır. Seviye atlayınca HP zarı atılır (sınıf zarı + Dayanıklılık).
+      </div>
+    </div>
+
+    <div style="background:var(--card);border:1px solid var(--bord);border-radius:8px;padding:14px;margin-bottom:10px">
+      <div style="font-size:.7rem;color:var(--ember);text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--bord)">Sınıf HP Zarları</div>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        ${Object.entries(CLASSES).map(([n,c])=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(61,46,24,.4);font-size:.78rem">
+          <span style="color:var(--parch)">${c.ico} ${n}</span>
+          <span style="color:var(--fire)">D${c.die} + DAY (min ${c.minHp})</span>
+        </div>`).join('')}
+      </div>
+    </div>
+
+    <div style="background:var(--card);border:1px solid var(--bord);border-radius:8px;padding:14px;margin-bottom:10px">
+      <div style="font-size:.7rem;color:var(--ember);text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--bord)">Hasar Türleri</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
+        ${DMG_TYPES.map(d=>`<div style="font-size:.78rem;color:var(--scroll);padding:4px 0">${d.i} ${d.l}</div>`).join('')}
+      </div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════
+// MODAL
+// ═══════════════════════════════════════════
+function openModal(html){document.getElementById('modal-content').innerHTML=html;document.getElementById('modal-overlay').classList.add('open');}
+function closeModal(){
+  document.getElementById('modal-overlay').classList.remove('open');
+  _itemImgTemp=null;
+  if(currentTab==='karakter') renderKarakTab();
+}
+function maybeCloseModal(e){if(e.target.id==='modal-overlay') closeModal();}
+
+// ═══════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════
+let _toastTimer=null;
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  if(_toastTimer) clearTimeout(_toastTimer);
+  _toastTimer=setTimeout(()=>el.classList.remove('show'),2400);
+}
+
+// ═══════════════════════════════════════════
+// IMAGE UTILS
+// ═══════════════════════════════════════════
+function compressImage(file,maxSize,callback){
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const img=new Image();
+    img.onload=()=>{
+      let w=img.width,h=img.height;
+      if(w>h){if(w>maxSize){h=h*maxSize/w;w=maxSize;}}
+      else{if(h>maxSize){w=w*maxSize/h;h=maxSize;}}
+      const canvas=document.createElement('canvas');
+      canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      callback(canvas.toDataURL('image/jpeg',.75));
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+function init(){
+  loadApp();
+  if(APP.activeId&&APP.characters.find(c=>c.id===APP.activeId)){
+    renderMain();
+  } else {
+    renderSelect();
+  }
+  if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+}
+
+document.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>
